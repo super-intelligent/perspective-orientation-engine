@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+:root {
+  --poe-bg: #0a0a0a;
+  --poe-surface: #111111;
+  --poe-border: #1f1f1f;
+  --poe-text-primary: #f0f0f0;
+  --poe-text-secondary: #6b6b6b;
+  --poe-text-muted: #3a3a3a;
+  --poe-accent: #4ade80;
+  --poe-accent-dim: #166534;
+}
