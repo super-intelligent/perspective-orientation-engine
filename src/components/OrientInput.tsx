@@ -1,13 +1,40 @@
 'use client'
 
 import { useState } from 'react'
+import type { User } from '@supabase/supabase-js'
 
-export default function OrientInput() {
+interface OrientInputProps {
+  user: User | null
+  sessionCount: number
+  onNeedsAuth: () => void
+  onNeedsUpgrade: () => void
+  onSessionIncrement: () => Promise<void>
+}
+
+export default function OrientInput({
+  user,
+  sessionCount,
+  onNeedsAuth,
+  onNeedsUpgrade,
+  onSessionIncrement,
+}: OrientInputProps) {
   const [value, setValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const isMember = user?.user_metadata?.is_member === true
+
   const handleOrient = async () => {
+    if (!user) {
+      onNeedsAuth()
+      return
+    }
+
+    if (sessionCount >= 1 && !isMember) {
+      onNeedsUpgrade()
+      return
+    }
+
     setIsLoading(true)
     setError(null)
 
@@ -15,11 +42,12 @@ export default function OrientInput() {
       const response = await fetch('/api/orient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brainDump: value })
+        body: JSON.stringify({ brainDump: value }),
       })
 
       const data = await response.json()
       console.log('[OrientInput] Response:', data)
+      await onSessionIncrement()
     } catch (err) {
       setError('Something went wrong. Please try again.')
       console.error('[OrientInput] Error:', err)
@@ -45,9 +73,7 @@ export default function OrientInput() {
         {isLoading ? 'Orienting...' : 'Orient'}
       </button>
 
-      {error && (
-        <p className="text-red-400 text-sm">{error}</p>
-      )}
+      {error && <p className="text-red-400 text-sm">{error}</p>}
     </div>
   )
 }

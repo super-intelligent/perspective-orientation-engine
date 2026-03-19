@@ -1,6 +1,38 @@
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
 import OrientInput from '@/components/OrientInput'
+import AuthModal from '@/components/AuthModal'
+import AuthGate from '@/components/AuthGate'
+import { useAuth } from '@/hooks/useAuth'
+import { useSessionCount } from '@/hooks/useSessionCount'
+
+function truncateEmail(email: string): string {
+  if (email.length <= 24) return email
+  const [local, domain] = email.split('@')
+  if (!domain) return email.slice(0, 24) + '...'
+  const truncatedLocal = local.length > 12 ? local.slice(0, 12) + '...' : local
+  return `${truncatedLocal}@${domain}`
+}
 
 export default function Home() {
+  const { user, loading, signOut } = useAuth()
+  const { count, increment } = useSessionCount(user?.id)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showAuthGate, setShowAuthGate] = useState(false)
+  const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   return (
     <div className="min-h-screen bg-[var(--poe-bg)] flex flex-col">
       {/* Zone 1 — Title Bar (fixed top) */}
@@ -8,7 +40,31 @@ export default function Home() {
         <h1 className="text-xs uppercase tracking-wider text-[var(--poe-text-primary)]">
           PERSPECTIVE ORIENTATION ENGINE
         </h1>
-        <div>{/* Placeholder for auth */}</div>
+        <div>
+          {!loading && user?.email && (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowDropdown((prev) => !prev)}
+                className="text-xs text-[var(--poe-text-secondary)] hover:text-[var(--poe-text-primary)] transition-colors"
+              >
+                {truncateEmail(user.email)}
+              </button>
+              {showDropdown && (
+                <div className="absolute right-0 top-full mt-1 bg-[var(--poe-surface)] border border-[var(--poe-border)] rounded shadow-lg">
+                  <button
+                    onClick={() => {
+                      setShowDropdown(false)
+                      signOut()
+                    }}
+                    className="px-4 py-2 text-sm text-[var(--poe-text-secondary)] hover:text-[var(--poe-text-primary)] hover:bg-[var(--poe-bg)] whitespace-nowrap transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Main content area with top padding to account for fixed header */}
@@ -26,7 +82,13 @@ export default function Home() {
 
           {/* Zone 4 — Input Area */}
           <div className="flex-1">
-            <OrientInput />
+            <OrientInput
+              user={user}
+              sessionCount={count}
+              onNeedsAuth={() => setShowAuthModal(true)}
+              onNeedsUpgrade={() => setShowAuthGate(true)}
+              onSessionIncrement={increment}
+            />
           </div>
         </div>
 
@@ -40,6 +102,9 @@ export default function Home() {
           </p>
         </footer>
       </main>
+
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      {showAuthGate && <AuthGate onClose={() => setShowAuthGate(false)} />}
     </div>
   )
 }
