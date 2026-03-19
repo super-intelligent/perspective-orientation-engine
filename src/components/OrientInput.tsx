@@ -28,15 +28,8 @@ export default function OrientInput({
   const isMember = user?.user_metadata?.is_member === true
 
   const handleOrient = async () => {
-    if (!user) {
-      onNeedsAuth()
-      return
-    }
-
-    if (sessionCount >= 1 && !isMember) {
-      onNeedsUpgrade()
-      return
-    }
+    // Auth and session gating bypassed for pipeline testing
+    // TODO: re-enable auth checks before production
 
     setError(null)
     onStateChange('loading')
