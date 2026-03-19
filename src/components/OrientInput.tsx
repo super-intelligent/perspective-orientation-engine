@@ -9,6 +9,8 @@ interface OrientInputProps {
   onNeedsAuth: () => void
   onNeedsUpgrade: () => void
   onSessionIncrement: () => Promise<void>
+  onStateChange: (state: 'input' | 'loading' | 'results') => void
+  onResult: (data: Record<string, unknown>) => void
 }
 
 export default function OrientInput({
@@ -17,9 +19,10 @@ export default function OrientInput({
   onNeedsAuth,
   onNeedsUpgrade,
   onSessionIncrement,
+  onStateChange,
+  onResult,
 }: OrientInputProps) {
   const [value, setValue] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const isMember = user?.user_metadata?.is_member === true
@@ -35,8 +38,8 @@ export default function OrientInput({
       return
     }
 
-    setIsLoading(true)
     setError(null)
+    onStateChange('loading')
 
     try {
       const response = await fetch('/api/orient', {
@@ -46,14 +49,26 @@ export default function OrientInput({
       })
 
       const data = await response.json()
-      console.log('[OrientInput] Response:', data)
+
+      if (data.error) {
+        onResult(data)
+        onStateChange('results')
+        return
+      }
+
+      onResult(data)
+      onStateChange('results')
       await onSessionIncrement()
     } catch (err) {
-      setError('Something went wrong. Please try again.')
       console.error('[OrientInput] Error:', err)
-    } finally {
-      setIsLoading(false)
+      setError('Orientation could not be mapped. Please try again.')
+      onStateChange('input')
     }
+  }
+
+  const reset = () => {
+    setValue('')
+    setError(null)
   }
 
   return (
@@ -67,10 +82,10 @@ export default function OrientInput({
 
       <button
         onClick={handleOrient}
-        disabled={value.length < 20 || isLoading}
+        disabled={value.length < 20}
         className="w-full py-3 bg-[var(--poe-accent)] text-black font-medium rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--poe-accent)]/90 transition-colors"
       >
-        {isLoading ? 'Orienting...' : 'Orient'}
+        Orient
       </button>
 
       {error && <p className="text-red-400 text-sm">{error}</p>}

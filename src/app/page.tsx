@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import OrientInput from '@/components/OrientInput'
+import OrientTransition from '@/components/OrientTransition'
+import OrientResults from '@/components/OrientResults'
 import AuthModal from '@/components/AuthModal'
 import AuthGate from '@/components/AuthGate'
 import { useAuth } from '@/hooks/useAuth'
@@ -15,9 +17,13 @@ function truncateEmail(email: string): string {
   return `${truncatedLocal}@${domain}`
 }
 
+type PageState = 'input' | 'loading' | 'results'
+
 export default function Home() {
   const { user, loading, signOut } = useAuth()
   const { count, increment } = useSessionCount(user?.id)
+  const [pageState, setPageState] = useState<PageState>('input')
+  const [orientResult, setOrientResult] = useState<Record<string, unknown> | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showAuthGate, setShowAuthGate] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
@@ -32,6 +38,11 @@ export default function Home() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  const handleReset = () => {
+    setPageState('input')
+    setOrientResult(null)
+  }
 
   return (
     <div className="min-h-screen bg-[var(--poe-bg)] flex flex-col">
@@ -70,26 +81,38 @@ export default function Home() {
       {/* Main content area with top padding to account for fixed header */}
       <main className="flex-1 pt-12 flex flex-col">
         <div className="max-w-2xl w-full mx-auto px-6 py-12 flex-1 flex flex-col">
-          {/* Zone 2 — Tagline */}
-          <p className="text-center text-[var(--poe-text-secondary)] mb-12">
-            The system does not evaluate reality. It stabilizes orientation toward it.
-          </p>
+          {pageState === 'input' && (
+            <>
+              {/* Zone 2 — Tagline */}
+              <p className="text-center text-[var(--poe-text-secondary)] mb-12">
+                The system does not evaluate reality. It stabilizes orientation toward it.
+              </p>
 
-          {/* Zone 3 — Disorder Invitation */}
-          <p className="text-[var(--poe-text-primary)] mb-6">
-            Describe your current situation. Whatever feels most present.
-          </p>
+              {/* Zone 3 — Disorder Invitation */}
+              <p className="text-[var(--poe-text-primary)] mb-6">
+                Describe your current situation. Whatever feels most present.
+              </p>
 
-          {/* Zone 4 — Input Area */}
-          <div className="flex-1">
-            <OrientInput
-              user={user}
-              sessionCount={count}
-              onNeedsAuth={() => setShowAuthModal(true)}
-              onNeedsUpgrade={() => setShowAuthGate(true)}
-              onSessionIncrement={increment}
-            />
-          </div>
+              {/* Zone 4 — Input Area */}
+              <div className="flex-1">
+                <OrientInput
+                  user={user}
+                  sessionCount={count}
+                  onNeedsAuth={() => setShowAuthModal(true)}
+                  onNeedsUpgrade={() => setShowAuthGate(true)}
+                  onSessionIncrement={increment}
+                  onStateChange={setPageState}
+                  onResult={setOrientResult}
+                />
+              </div>
+            </>
+          )}
+
+          {pageState === 'loading' && <OrientTransition />}
+
+          {pageState === 'results' && orientResult && (
+            <OrientResults result={orientResult} onReset={handleReset} />
+          )}
         </div>
 
         {/* Zone 5 — Disclaimer (bottom, always visible) */}
