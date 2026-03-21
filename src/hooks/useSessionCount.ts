@@ -3,9 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 
-const supabase = createClient()
-
 export function useSessionCount(userId: string | undefined) {
+  const supabase = createClient()
   const [count, setCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
