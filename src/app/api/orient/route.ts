@@ -186,23 +186,20 @@ export async function POST(request: NextRequest) {
     const cleaned = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
     const result = JSON.parse(cleaned)
 
-    // Save orientation to Supabase
+    // Save orientation to Supabase via RPC (bypasses schema cache)
     let orientationId: string | null = null
     try {
       const supabase = getServiceClient()
-      const { data: saved, error: saveError } = await supabase
-        .from('orientations')
-        .insert({
-          brain_dump: brainDump,
-          result_json: result,
-          field_coherence: result.field_coherence ?? null,
-          central_archetype: result.gravity_structure?.center_archetype ?? null,
+      const { data: savedId, error: saveError } = await supabase
+        .rpc('save_orientation', {
+          p_brain_dump: brainDump,
+          p_result_json: result,
+          p_field_coherence: result.field_coherence ?? null,
+          p_central_archetype: result.gravity_structure?.center_archetype ?? null,
         })
-        .select('id')
-        .single()
 
-      if (!saveError && saved) {
-        orientationId = saved.id
+      if (!saveError && savedId) {
+        orientationId = savedId
       }
     } catch (saveErr) {
       console.error('[/api/orient] Save error (non-fatal):', saveErr)
