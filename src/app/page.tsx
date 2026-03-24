@@ -26,6 +26,7 @@ export default function Home() {
   const [orientResult, setOrientResult] = useState<Record<string, unknown> | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showAuthGate, setShowAuthGate] = useState(false)
+  const [orientationUrl, setOrientationUrl] = useState<string | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -39,9 +40,19 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  useEffect(() => {
+    if (orientResult && 'orientation_id' in orientResult && orientResult.orientation_id) {
+      const url = `/orient/${orientResult.orientation_id}`
+      window.history.pushState({}, '', url)
+      setOrientationUrl(`${window.location.origin}${url}`)
+    }
+  }, [orientResult])
+
   const handleReset = () => {
     setPageState('input')
     setOrientResult(null)
+    setOrientationUrl(null)
+    window.history.pushState({}, '', '/')
   }
 
   return (
@@ -111,7 +122,24 @@ export default function Home() {
           {pageState === 'loading' && <OrientTransition />}
 
           {pageState === 'results' && orientResult && (
-            <OrientResults result={orientResult} onReset={handleReset} />
+            <>
+              {orientationUrl && (
+                <div className="mb-4 flex items-center gap-2">
+                  <p className="text-[11px] text-[var(--poe-text-muted)]">
+                    Saved — shareable link:
+                  </p>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(orientationUrl)
+                    }}
+                    className="text-[11px] text-[var(--poe-accent)] hover:underline"
+                  >
+                    Copy link
+                  </button>
+                </div>
+              )}
+              <OrientResults result={orientResult} onReset={handleReset} />
+            </>
           )}
         </div>
 

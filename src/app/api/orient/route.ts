@@ -1,7 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
 const anthropic = new Anthropic()
+
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 const SYSTEM_PROMPT = `You are the Perspective Orientation Engine extraction layer.
 
@@ -178,7 +186,29 @@ export async function POST(request: NextRequest) {
     const cleaned = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
     const result = JSON.parse(cleaned)
 
-    return NextResponse.json(result)
+    // Save orientation to Supabase
+    let orientationId: string | null = null
+    try {
+      const supabase = getServiceClient()
+      const { data: saved, error: saveError } = await supabase
+        .from('orientations')
+        .insert({
+          brain_dump: brainDump,
+          result_json: result,
+          field_coherence: result.field_coherence ?? null,
+          central_archetype: result.gravity_structure?.center_archetype ?? null,
+        })
+        .select('id')
+        .single()
+
+      if (!saveError && saved) {
+        orientationId = saved.id
+      }
+    } catch (saveErr) {
+      console.error('[/api/orient] Save error (non-fatal):', saveErr)
+    }
+
+    return NextResponse.json({ ...result, orientation_id: orientationId })
   } catch (err) {
     console.error('[/api/orient] Error:', err)
     return NextResponse.json(
