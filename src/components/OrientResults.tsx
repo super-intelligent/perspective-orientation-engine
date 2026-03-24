@@ -9,6 +9,7 @@ interface Claim {
   relevance: string
   inferred: boolean
   archetype: string
+  narrative: string
   quadrant_tension: string[]
   domain_tension: string[]
   gravity_role: string | null
@@ -155,6 +156,11 @@ function CentralClaimCard({
         <Badge label={claim.relevance} />
       </div>
       <TensionDisplay quadrantTension={claim.quadrant_tension ?? []} domainTension={claim.domain_tension ?? []} />
+      {claim.narrative && (
+        <p className="text-sm text-[var(--poe-text-secondary)] mt-3 leading-relaxed">
+          {claim.narrative}
+        </p>
+      )}
       {gravityStructure?.why_central && (
         <p className="text-xs text-[var(--poe-text-secondary)] mt-3">
           {gravityStructure.why_central}
@@ -193,6 +199,16 @@ function ClaimCard({
         <p className="text-[11px] text-[var(--poe-text-muted)] italic mt-2">
           {roleLabel} for {centerArchetype ?? 'center'}
         </p>
+      )}
+      {claim.narrative && (
+        <details className="mt-3">
+          <summary className="text-xs text-[var(--poe-accent)] cursor-pointer hover:underline">
+            Why this placement
+          </summary>
+          <p className="text-sm text-[var(--poe-text-secondary)] mt-2 leading-relaxed">
+            {claim.narrative}
+          </p>
+        </details>
       )}
     </div>
   )

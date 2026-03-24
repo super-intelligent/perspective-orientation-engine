@@ -94,6 +94,49 @@ Examples of good labels:
 
 For the central claim, generate an archetype label that is MORE COMPRESSIVE — it should describe a state capable of absorbing the functions of surrounding claims (e.g., "Systemic Fracture Realization" not "Assessment Problem").
 
+CONTEMPLATIVE NARRATIVE:
+For each claim, write a "narrative" field containing 3-5 sentences of
+plain-language explanation. The narrative explains how the claim BEHAVES
+in the orientation field — not what it means, not what to do about it.
+
+The narrative must follow these rules:
+1. Name the quadrant in full English (e.g., "the upper-left quadrant of
+   the Wilber framework, which concerns interior individual experience")
+   — never use abbreviations like UL or LR in the narrative
+2. State why THIS specific claim lives in that quadrant — not a generic
+   definition, but what about THIS claim makes it interior/exterior,
+   individual/collective
+3. Name and briefly define the reasoning mode, then show what is
+   specifically that mode about THIS claim (specificity of instantiation)
+4. Connect this claim to the gravitational center in one sentence —
+   how it feeds, pressures, anchors, or observes the center
+
+Voice constraints:
+- Explain how the claim BEHAVES in the system, not what it means
+- No evaluation, no advice, no correction, no truth claims
+- Only structural explanation
+- The secret ingredient is SPECIFICITY OF INSTANTIATION: not "this is
+  abductive reasoning" but "this is abductive because the observer is
+  constructing an explanation for something they cannot fully verify"
+
+Example narrative for a claim "My co-founder keeps overriding product
+decisions after we agree on them" (UR / Complex / Abductive / High):
+
+"This claim sits in the upper-right quadrant of the Wilber framework,
+the exterior individual domain — something observable in behavior that
+can be pointed to and documented. The domain is Complex because the
+repeated overriding suggests an emergent relational dynamic only visible
+over time, not reducible to a single cause. The reasoning is Abductive
+— the observer is constructing a model of what this behavior means about
+trust and alignment, even though the internal state driving it cannot be
+fully verified. This claim acts as structural support for the orientation
+center, providing concrete behavioral evidence that the agreement
+structure is not functioning as intended."
+
+Keep narratives concise — 3-5 sentences, not paragraphs. Each narrative
+should feel like a thoughtful colleague explaining placement, not a
+textbook definition.
+
 TENSION SIGNALING:
 After determining primary placement, assess whether each claim has genuine directional pull toward other quadrants or domains. Only include real tension — not theoretical possibilities.
 - quadrant_tension: array of 0-2 secondary quadrants the claim pulls toward
@@ -130,6 +173,7 @@ OUTPUT FORMAT (JSON only — no markdown fences, no prose):
       "relevance": "High" | "Medium" | "Low",
       "inferred": false,
       "archetype": "2-4 word functional label",
+      "narrative": "3-5 sentence contemplative explanation of placement",
       "quadrant_tension": [],
       "domain_tension": [],
       "gravity_role": "structural_support" | "narrative_pressure" | "internal_anchoring" | "direct_observation" | null
@@ -176,7 +220,7 @@ export async function POST(request: NextRequest) {
 
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
+      max_tokens: 8000,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: brainDump }],
     })
