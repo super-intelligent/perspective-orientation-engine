@@ -95,47 +95,48 @@ Examples of good labels:
 For the central claim, generate an archetype label that is MORE COMPRESSIVE — it should describe a state capable of absorbing the functions of surrounding claims (e.g., "Systemic Fracture Realization" not "Assessment Problem").
 
 CONTEMPLATIVE NARRATIVE:
-For each claim, write a "narrative" field containing 3-5 sentences of
-plain-language explanation. The narrative explains how the claim BEHAVES
-in the orientation field — not what it means, not what to do about it.
+For each claim, produce a "narrative" object (not a string) with five
+fields. Each field explains one vector layer of the placement.
 
-The narrative must follow these rules:
-1. Name the quadrant in full English (e.g., "the upper-left quadrant of
-   the Wilber framework, which concerns interior individual experience")
-   — never use abbreviations like UL or LR in the narrative
-2. State why THIS specific claim lives in that quadrant — not a generic
-   definition, but what about THIS claim makes it interior/exterior,
-   individual/collective
-3. Name and briefly define the reasoning mode, then show what is
-   specifically that mode about THIS claim (specificity of instantiation)
-4. Connect this claim to the gravitational center in one sentence —
-   how it feeds, pressures, anchors, or observes the center
+"narrative": {
+  "quadrant": "2-3 sentences. Name the quadrant in full English.
+    State why THIS claim lives here by contrasting with what it is NOT.
+    Example: 'This sits in the upper-left — interior individual
+    experience. It is not observable behavior (upper-right), not shared
+    cultural meaning (lower-left), not institutional structure
+    (lower-right). It lives here because it is a personal realization
+    happening inside the observer.'",
 
-Voice constraints:
+  "domain": "2-3 sentences. Name the Cynefin domain. Explain why this
+    claim belongs in THIS domain by showing what makes the cause-effect
+    relationship clear/complicated/complex/chaotic for THIS specific
+    situation. Use specificity of instantiation.",
+
+  "reasoning": "2-3 sentences. Name the reasoning mode. Show what is
+    specifically deductive/inductive/abductive about THIS claim — not a
+    generic definition. The secret ingredient is specificity: 'This is
+    abductive because the observer is constructing an explanation for
+    something they cannot fully verify' not just 'This is abductive
+    reasoning.'",
+
+  "relevance": "1-2 sentences. State the relevance level and why. What
+    makes this claim high/medium/low in terms of how actively it shapes
+    the observer's attention?",
+
+  "gravity": "1-2 sentences. How this claim relates to the gravitational
+    center — what type of gravity it provides (structural support,
+    narrative pressure, internal anchoring, or direct observation) and
+    why."
+}
+
+Voice constraints (apply to ALL five fields):
 - Explain how the claim BEHAVES in the system, not what it means
 - No evaluation, no advice, no correction, no truth claims
 - Only structural explanation
-- The secret ingredient is SPECIFICITY OF INSTANTIATION: not "this is
-  abductive reasoning" but "this is abductive because the observer is
-  constructing an explanation for something they cannot fully verify"
-
-Example narrative for a claim "My co-founder keeps overriding product
-decisions after we agree on them" (UR / Complex / Abductive / High):
-
-"This claim sits in the upper-right quadrant of the Wilber framework,
-the exterior individual domain — something observable in behavior that
-can be pointed to and documented. The domain is Complex because the
-repeated overriding suggests an emergent relational dynamic only visible
-over time, not reducible to a single cause. The reasoning is Abductive
-— the observer is constructing a model of what this behavior means about
-trust and alignment, even though the internal state driving it cannot be
-fully verified. This claim acts as structural support for the orientation
-center, providing concrete behavioral evidence that the agreement
-structure is not functioning as intended."
-
-Keep narratives concise — 3-5 sentences, not paragraphs. Each narrative
-should feel like a thoughtful colleague explaining placement, not a
-textbook definition.
+- Use contrast framing where natural: explain what something IS by
+  noting what it is NOT
+- Each field should feel like a thoughtful colleague explaining one
+  aspect of placement
 
 TENSION SIGNALING:
 After determining primary placement, assess whether each claim has genuine directional pull toward other quadrants or domains. Only include real tension — not theoretical possibilities.
@@ -173,7 +174,13 @@ OUTPUT FORMAT (JSON only — no markdown fences, no prose):
       "relevance": "High" | "Medium" | "Low",
       "inferred": false,
       "archetype": "2-4 word functional label",
-      "narrative": "3-5 sentence contemplative explanation of placement",
+      "narrative": {
+        "quadrant": "...",
+        "domain": "...",
+        "reasoning": "...",
+        "relevance": "...",
+        "gravity": "..."
+      },
       "quadrant_tension": [],
       "domain_tension": [],
       "gravity_role": "structural_support" | "narrative_pressure" | "internal_anchoring" | "direct_observation" | null
