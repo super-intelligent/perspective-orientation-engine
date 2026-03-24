@@ -2,11 +2,11 @@
 
 :root {
   --poe-bg: #0a0a0a;
-  --poe-surface: #111111;
-  --poe-border: #1f1f1f;
-  --poe-text-primary: #f0f0f0;
-  --poe-text-secondary: #b0b0b0;
-  --poe-text-muted: #808080;
+  --poe-surface: #141414;
+  --poe-border: #333333;
+  --poe-text-primary: #f5f5f5;
+  --poe-text-secondary: #d0d0d0;
+  --poe-text-muted: #a8a8a8;
   --poe-accent: #4ade80;
-  --poe-accent-dim: #166534;
+  --poe-accent-dim: #22c55e;
 }

@@ -36,10 +36,10 @@ interface OrientResult {
 }
 
 const QUADRANT_COLORS: Record<string, string> = {
-  UL: 'border-blue-400/40 text-blue-300/80',
-  UR: 'border-green-400/40 text-green-300/80',
-  LL: 'border-purple-400/40 text-purple-300/80',
-  LR: 'border-amber-400/40 text-amber-300/80',
+  UL: 'border-blue-400 text-blue-300',
+  UR: 'border-green-400 text-green-300',
+  LL: 'border-purple-400 text-purple-300',
+  LR: 'border-amber-400 text-amber-300',
 }
 
 const QUADRANT_LABELS: Record<string, string> = {
