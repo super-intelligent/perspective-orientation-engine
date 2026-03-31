@@ -242,11 +242,12 @@ export async function POST(request: NextRequest) {
     try {
       const supabase = getServiceClient()
       const { data: savedId, error: saveError } = await supabase
-        .rpc('save_orientation', {
-          p_brain_dump: brainDump,
+        .rpc('save_orientation_v2', {
+          p_brain_dump:  brainDump,
           p_result_json: result,
-          p_field_coherence: result.field_coherence ?? null,
-          p_central_archetype: result.gravity_structure?.center_archetype ?? null,
+          p_user_id:     null,
+          p_project_id:  null,
+          p_tenant_id:   null,
         })
 
       if (!saveError && savedId) {
