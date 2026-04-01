@@ -1,29 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-
-interface ClaimNarrative {
-  quadrant: string
-  domain: string
-  reasoning: string
-  relevance: string
-  gravity: string
-}
-
-interface Claim {
-  id: string
-  text: string
-  quadrant: 'UL' | 'UR' | 'LL' | 'LR'
-  domain: string
-  reasoning: string
-  relevance: string
-  inferred: boolean
-  archetype: string
-  narrative: ClaimNarrative | string
-  quadrant_tension: string[]
-  domain_tension: string[]
-  gravity_role: string | null
-}
+import TensorDatasphere from '@/components/TensorDatasphere'
+import type { Claim, ClaimNarrative } from '@/types/orientation'
 
 interface GravityStructure {
   center_archetype: string
@@ -404,6 +383,8 @@ export default function OrientResults({
     )
   }
 
+  const [showDatasphere, setShowDatasphere] = useState(false)
+
   const claims = result.claims ?? []
   const centralIds = Array.isArray(result.central_claim_id)
     ? result.central_claim_id
@@ -434,13 +415,43 @@ export default function OrientResults({
 
   return (
     <div className="flex-1 py-8">
-      <h2 className="text-lg font-medium text-[var(--poe-text-primary)] mb-1">
-        Orientation Map Generated
-      </h2>
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="text-lg font-medium text-[var(--poe-text-primary)]">
+          Orientation Map Generated
+        </h2>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowDatasphere(false)}
+            className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded border transition-colors ${
+              !showDatasphere
+                ? 'border-[var(--poe-accent)] text-[var(--poe-accent)]'
+                : 'border-[var(--poe-border)] text-[var(--poe-text-muted)] hover:text-[var(--poe-text-secondary)]'
+            }`}
+          >
+            Orientation
+          </button>
+          <button
+            onClick={() => setShowDatasphere(true)}
+            className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded border transition-colors ${
+              showDatasphere
+                ? 'border-[var(--poe-accent)] text-[var(--poe-accent)]'
+                : 'border-[var(--poe-border)] text-[var(--poe-text-muted)] hover:text-[var(--poe-text-secondary)]'
+            }`}
+          >
+            Observatory
+          </button>
+        </div>
+      </div>
       <p className="text-xs text-[var(--poe-text-muted)] mb-8">
         Orientation snapshot. Not a verdict.
       </p>
 
+      {showDatasphere ? (
+        <TensorDatasphere
+          claims={claims}
+          centralClaimId={result.central_claim_id}
+        />
+      ) : (
       <div className="space-y-3">
         {/* Central claim(s) first */}
         {isDistributedOrLow ? (
@@ -466,6 +477,7 @@ export default function OrientResults({
           <ClaimCard key={claim.id} claim={claim} centerArchetype={centerArchetype} />
         ))}
       </div>
+      )}
 
       <div className="mt-8 text-center">
         <button
