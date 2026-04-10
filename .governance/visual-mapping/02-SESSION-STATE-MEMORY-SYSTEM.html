@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POE — Architecture & Build State</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --live:       #CF8B2A;
+  --live-hi:    #EF9F27;
+  --live-bg:    #18140a;
+  --live-dim:   #7a5e1a;
+  --next:       #1A7A5A;
+  --next-hi:    #1D9E75;
+  --next-bg:    #071410;
+  --next-dim:   #0f4535;
+  --inc:        #5A53A8;
+  --inc-hi:     #7F77DD;
+  --inc-bg:     #0b0a18;
+  --inc-dim:    #332e6e;
+  --fut:        #554E44;
+  --fut-bg:     #100f0d;
+  --gate:       #B84A20;
+  --gate-hi:    #E06030;
+  --bg:         #0c0b09;
+  --bg2:        #131210;
+  --text:       #c4bfb2;
+  --text-dim:   #6e6a60;
+  --text-hi:    #e8e2d4;
+  --border:     #2a2820;
+  --mono:       'IBM Plex Mono', monospace;
+  --serif:      'DM Serif Display', serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image: radial-gradient(circle, rgba(180,140,60,0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+.diagram-title {
+  font-family: var(--serif);
+  font-size: 28px;
+  color: var(--text-hi);
+  margin-bottom: 4px;
+  letter-spacing: -0.3px;
+}
+.diagram-sub {
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 36px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ZONE */
+.zone {
+  margin-bottom: 0;
+  border-left: 3px solid;
+  padding-left: 20px;
+  margin-left: 0;
+  position: relative;
+}
+.zone.live    { border-color: var(--live);       }
+.zone.next    { border-color: var(--next);        }
+.zone.inc     { border-color: var(--inc);         }
+.zone.fut     { border-color: var(--fut);         }
+
+.zone-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.live .zone-label  { color: var(--live-hi);  }
+.next .zone-label  { color: var(--next-hi);  }
+.inc  .zone-label  { color: var(--inc-hi);   }
+.fut  .zone-label  { color: var(--fut);      }
+
+.badge {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  padding: 2px 7px;
+  border-radius: 2px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.live  .badge { background: var(--live-bg);  color: var(--live-hi);  border: 1px solid var(--live-dim); }
+.next  .badge { background: var(--next-bg);  color: var(--next-hi);  border: 1px solid var(--next-dim); }
+.inc   .badge { background: var(--inc-bg);   color: var(--inc-hi);   border: 1px solid var(--inc-dim);  }
+.fut   .badge { background: var(--fut-bg);   color: var(--fut);      border: 1px solid var(--fut);      }
+
+/* ROW + NODE */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  position: relative;
+}
+.row.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.node {
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 8px 11px;
+  position: relative;
+  cursor: default;
+  transition: border-color 0.2s, background 0.2s;
+  min-width: 110px;
+}
+.node .n-title { font-weight: 600; font-size: 11px; color: var(--text-hi); margin-bottom: 2px; }
+.node .n-sub   { font-size: 9.5px; color: var(--text-dim); line-height: 1.4; }
+.node .n-tag   { font-size: 8px; margin-top: 4px; letter-spacing: 0.1em; text-transform: uppercase; }
+.live .node  { background: var(--live-bg); border-color: var(--live-dim); }
+.next .node  { background: var(--next-bg); border-color: var(--next-dim); }
+.inc  .node  { background: var(--inc-bg);  border-color: var(--inc-dim);  }
+.fut  .node  { background: var(--fut-bg);  border-color: var(--fut);      }
+.live .node:hover { border-color: var(--live-hi); background: #221a0c; }
+.next .node:hover { border-color: var(--next-hi); background: #0a1e16; }
+.inc  .node:hover { border-color: var(--inc-hi);  background: #100e22; }
+.node.central { border-width: 1.5px; }
+.live .node.central { border-color: var(--live-hi); }
+.next .node.central { border-color: var(--next-hi); }
+.inc  .node.central { border-color: var(--inc-hi);  }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+.node.live-pulse::before {
+  content: '';
+  position: absolute;
+  top: 6px; right: 7px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--live-hi);
+  animation: pulse 2.8s ease-in-out infinite;
+}
+.arr { color: var(--text-dim); font-size: 15px; padding: 0 5px; flex-shrink: 0; align-self: center; }
+.arr-d { text-align: left; color: var(--text-dim); font-size: 13px; margin: 3px 0 3px 2px; }
+.arr-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.08em; padding: 0 4px; align-self: center; }
+.zone-gap { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+.zone-gap .gap-line { flex:1; height:1px; background: var(--border); }
+.zone-gap .gap-text { font-size: 9px; color: var(--text-dim); letter-spacing: 0.14em; text-transform: uppercase; }
+.gate-block {
+  border: 1.5px solid var(--gate); border-radius: 6px; padding: 14px 18px;
+  margin: 22px 0; background: #150c08;
+  display: flex; align-items: center; gap: 16px;
+}
+.gate-icon { font-size: 20px; flex-shrink: 0; }
+.gate-title { font-weight: 600; font-size: 12px; color: var(--gate-hi); margin-bottom: 3px; letter-spacing: 0.04em; }
+.gate-desc  { font-size: 10px; color: var(--text-dim); line-height: 1.5; }
+.gate-pill  { margin-left:auto; font-size:8px; letter-spacing:0.16em; text-transform:uppercase; background:#2a1008; color:var(--gate-hi); border:1px solid var(--gate); padding:4px 10px; border-radius:2px; flex-shrink:0; }
+.row-header { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin: 14px 0 6px; }
+.tech { display:inline-block; font-size:8px; background:#18160e; border:1px solid var(--border); border-radius:2px; padding:1px 5px; color:var(--text-dim); margin:2px 2px 0 0; }
+.n-techs { margin-top: 5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="diagram-title">Perspective Orientation Engine</div>
+<div class="diagram-sub">Architecture map &nbsp;·&nbsp; Build state S-009 &nbsp;·&nbsp; Session 10 &nbsp;·&nbsp; 2026-03-31 &nbsp;·&nbsp; git 604e9e5</div>
+
+<!-- ═══════════════════════ LIVE ZONE ═══════════════════════ -->
+<section class="zone live">
+  <div class="zone-label"><span class="badge">Live</span> Full pipeline — perspective.super-intelligent.ai</div>
+
+  <div class="row-header">01 &nbsp;·&nbsp; User input layer</div>
+  <div class="row">
+    <div class="node live-pulse">
+      <div class="n-title">Browser / User</div>
+      <div class="n-sub">Any device, no auth required (bypassed)</div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node live-pulse central">
+      <div class="n-title">Brain Dump</div>
+      <div class="n-sub">Free-text input · no structure imposed · TRUE-BY-ASSUMPTION applies immediately</div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node live-pulse">
+      <div class="n-title">POST /api/orient</div>
+      <div class="n-sub">Next.js route handler · Vercel edge</div>
+      <div class="n-techs"><span class="tech">Next.js 16</span><span class="tech">Vercel</span></div>
+    </div>
+  </div>
+
+  <div class="arr-d">↓</div>
+
+  <div class="row-header">02 &nbsp;·&nbsp; AI extraction layer</div>
+  <div class="row">
+    <div class="node live-pulse central">
+      <div class="n-title">Claude Sonnet 4.6</div>
+      <div class="n-sub">Upgraded S-009 · single extraction call · system prompt with doctrine axioms + gold-standard examples</div>
+      <div class="n-techs"><span class="tech">claude-sonnet-4-6</span><span class="tech">Anthropic API</span></div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node live-pulse">
+      <div class="n-title">Claim Extraction</div>
+      <div class="n-sub">5–15 discrete claims per brain dump · atomized from raw text · no truth evaluation</div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node live-pulse">
+      <div class="n-title">Tensor per Claim</div>
+      <div class="n-sub">Each claim gets a full multi-axis position object in the extraction JSON</div>
+    </div>
+  </div>
+
+  <div class="arr-d">↓</div>
+
+  <div class="row-header">03 &nbsp;·&nbsp; Tensor engine — 5 axes mapped per claim</div>
+  <div class="row grid">
+    <div class="node">
+      <div class="n-title">AQAL Quadrant</div>
+      <div class="n-sub">UL · UR · LL · LR<br>Interior/Exterior × Individual/Collective</div>
+      <div class="n-tag" style="color:var(--live-dim)">Wilber</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Cynefin Domain</div>
+      <div class="n-sub">Clear · Complicated · Complex · Chaotic<br>Complexity landscape</div>
+      <div class="n-tag" style="color:var(--live-dim)">Snowden</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Reasoning Mode</div>
+      <div class="n-sub">Deductive · Inductive · Abductive<br>How the claim argues</div>
+      <div class="n-tag" style="color:var(--live-dim)">Classification</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Relevance Weight</div>
+      <div class="n-sub">High · Medium · Low<br>Vervaeke relevance realization signal</div>
+      <div class="n-tag" style="color:var(--live-dim)">Vervaeke</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Gravity Type</div>
+      <div class="n-sub">Central · Orbital · Peripheral<br>+ recursive loop detection</div>
+      <div class="n-tag" style="color:var(--live-dim)">Structural</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Tension Vectors</div>
+      <div class="n-sub">Secondary quadrant/domain pulls · shows honest ambiguity in placement</div>
+      <div class="n-tag" style="color:var(--live-dim)">S-005</div>
+    </div>
+  </div>
+
+  <div class="arr-d">↓ &nbsp;tensor fusion</div>
+
+  <div class="row-header">04 &nbsp;·&nbsp; Extraction output objects</div>
+  <div class="row grid">
+    <div class="node">
+      <div class="n-title">Archetype Label</div>
+      <div class="n-sub">Semantic compression of full tensor into one human-readable phrase · e.g. "Identity Destabilization"</div>
+    </div>
+    <div class="node central">
+      <div class="n-title">Central Claim</div>
+      <div class="n-sub">Gravitational center · determined structurally · all 5 narrative sections always visible</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Gravitational Structure</div>
+      <div class="n-sub">4 gravity types · which claims feed center · recursive feedback loops named</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Field Coherence</div>
+      <div class="n-sub">Strong · Competing · Distributed · Low · describes the shape of the full orientation field</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Atomized Narratives</div>
+      <div class="n-sub">5-field object per claim: quadrant · domain · reasoning · relevance · gravity — clickable badge pills</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Relevance Gradient</div>
+      <div class="n-sub">Low / Medium / High legend · active level highlighted green · signals epistemic weight</div>
+    </div>
+  </div>
+
+  <div class="arr-d">↓</div>
+
+  <div class="row-header">05 &nbsp;·&nbsp; Persistence layer</div>
+  <div class="row">
+    <div class="node live-pulse">
+      <div class="n-title">Auto-Save</div>
+      <div class="n-sub">Fires on every successful extraction · no user action required</div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node live-pulse">
+      <div class="n-title">save_orientation RPC</div>
+      <div class="n-sub">Postgres security-definer function · bypasses PostgREST schema cache · returns UUID</div>
+      <div class="n-techs"><span class="tech">Supabase</span><span class="tech">RPC</span><span class="tech">AWS us-east-2</span></div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node live-pulse">
+      <div class="n-title">orientations table</div>
+      <div class="n-sub">UUID · result_json JSONB (full extraction) · raw brain dump · created_at · RLS enabled</div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node live-pulse central">
+      <div class="n-title">/orient/[uuid]</div>
+      <div class="n-sub">Permanent shareable URL · get_orientation RPC on load · full state reconstructed from JSONB</div>
+    </div>
+  </div>
+
+  <div class="arr-d" style="margin-left:0">↓ &nbsp;rendered to user via</div>
+
+  <div class="row-header">06 &nbsp;·&nbsp; Output renderer — current UI</div>
+  <div class="row grid">
+    <div class="node">
+      <div class="n-title">Orientation Field</div>
+      <div class="n-sub">Radial card layout · central claim expanded · non-central claims collapsible</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Badge Pills</div>
+      <div class="n-sub">Clickable quadrant / domain / reasoning / relevance / gravity tags per claim · reveal section explanations</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Contemplative Voice</div>
+      <div class="n-sub">3–5 sentence plain-language narrative per claim · specificity of instantiation · gold-standard voice</div>
+    </div>
+    <div class="node">
+      <div class="n-title">data-* Attributes</div>
+      <div class="n-sub">data-claim-id · data-axis-key · data-narrative-key pre-wired on every claim node · future viz binding</div>
+      <div class="n-techs"><span class="tech">S-008</span><span class="tech">Datasphere ready</span></div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════ GATE ═══════════════════════ -->
+<div class="gate-block">
+  <div class="gate-icon">⚑</div>
+  <div>
+    <div class="gate-title">Open Gate — S-008 / S-009 Output Test</div>
+    <div class="gate-desc">
+      Submit a real brain dump at perspective.super-intelligent.ai · verify: clickable badge pills, atomized narratives (5 sections), relevance gradient legend,
+      Sonnet 4.6 contemplative voice quality, gravitational center clarity, shareable UUID URL · report findings here · this gate must pass before any new slice begins
+    </div>
+  </div>
+  <div class="gate-pill">You are here</div>
+</div>
+
+<!-- ═══════════════════════ NEXT ZONE ═══════════════════════ -->
+<section class="zone next">
+  <div class="zone-label"><span class="badge">Next</span> SLICE-VIZ-DATASPHERE — after gate passes</div>
+
+  <div class="row-header">07 &nbsp;·&nbsp; Datasphere visualization layer</div>
+  <div class="row">
+    <div class="node central">
+      <div class="n-title">Observatory Toggle</div>
+      <div class="n-sub">New button on orientation result page · switches between current card view and Datasphere · default: card view</div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node central">
+      <div class="n-title">Canvas 2D Tensor Field</div>
+      <div class="n-sub">Manual perspective projection · drag to rotate · claims float in 3D tensor space · click to inspect</div>
+      <div class="n-techs"><span class="tech">Canvas 2D</span><span class="tech">Phase 1</span></div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node">
+      <div class="n-title">Three.js upgrade</div>
+      <div class="n-sub">Phase 2 migration · true WebGL depth · quaternion rotation · particle haze on Complex/Chaotic boundary</div>
+      <div class="n-techs"><span class="tech">Three.js</span><span class="tech">Phase 2</span></div>
+    </div>
+  </div>
+
+  <div class="arr-d">↓ &nbsp;four projection lens modes — same tensor data, different collapse</div>
+
+  <div class="row grid">
+    <div class="node">
+      <div class="n-title">Quadrant Lens</div>
+      <div class="n-sub">AQAL 2D grid · claims colored by quadrant · where does this orientation live on the four-quadrant map?</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Cynefin Terrain</div>
+      <div class="n-sub">Domain zone map · complexity landscape visible at a glance · Clear / Complicated / Complex / Chaotic zones</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Gravity Map</div>
+      <div class="n-sub">Hub + orbital rings · central claim at center · orbital and peripheral claims at distance rings · structural organization</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Tension Web</div>
+      <div class="n-sub">Force-directed layout · tension lines between claims with overlapping tensor fields · honest ambiguity visible</div>
+    </div>
+  </div>
+
+  <div class="row-header" style="margin-top:8px">data binding — no schema changes required for Phase 1</div>
+  <div class="row">
+    <div class="node">
+      <div class="n-title">S-008 data-* attributes</div>
+      <div class="n-sub">data-claim-id · data-axis-key · data-narrative-key — already live in deployed DOM · D3 / Canvas reads directly</div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node">
+      <div class="n-title">result_json JSONB</div>
+      <div class="n-sub">Full extraction object already in Supabase · get_orientation RPC returns everything the Datasphere needs</div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node">
+      <div class="n-title">Tensor positions</div>
+      <div class="n-sub">X: Individual↔Collective · Y: Interior↔Exterior · Z: Cynefin depth · size: relevance · distance: gravity type</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════ INCUBATING ZONE ═══════════════════════ -->
+<section class="zone inc" style="margin-top:0">
+  <div class="zone-label"><span class="badge">Incubating</span> Sequencing-locked — .governance/incubating/</div>
+
+  <div class="row-header">08 &nbsp;·&nbsp; prerequisite — must build first</div>
+  <div class="row">
+    <div class="node central">
+      <div class="n-title">SLICE-SOCRATIC</div>
+      <div class="n-sub">New API route: /api/socratic · conditional question generation · gap-triggered · up to 3 Socratic questions per orientation · Mode A: never / Mode B: gap-triggered</div>
+    </div>
+    <span class="arr">──→</span>
+    <div class="node">
+      <div class="n-title">Real output data</div>
+      <div class="n-sub">field_coherence + collapse_profile must be confirmed from actual brain dump runs before META-LAYER can be wired correctly</div>
+    </div>
+  </div>
+
+  <div class="arr-d">↓ &nbsp;unlocks</div>
+
+  <div class="row-header">09 &nbsp;·&nbsp; META-LAYER — spec complete, awaiting sequencing</div>
+  <div class="row grid">
+    <div class="node">
+      <div class="n-title">META-LAYER-SPEC.md</div>
+      <div class="n-sub">Complete architectural spec · philosophically audited · Landauer's Principle applied · orientation dynamics continuum chunks 22–25</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Socratic Timing Engine</div>
+      <div class="n-sub">Governs WHEN questions fire, not just WHETHER they fire · timing is the key architectural insight</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Field Coherence Detection</div>
+      <div class="n-sub">Strong / Competing / Distributed / Low · session-level field observation · reads completed extraction JSON</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Collapse Detection</div>
+      <div class="n-sub">Detects when orientation field is collapsing toward single-domain dominance · triggers gentle Socratic intervention</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Opus model call</div>
+      <div class="n-sub">Separate API call · reads completed extraction JSON as structural data · does not re-run extraction</div>
+      <div class="n-techs"><span class="tech">claude-opus-4-6</span><span class="tech">Separate call</span></div>
+    </div>
+    <div class="node">
+      <div class="n-title">distribution_profile</div>
+      <div class="n-sub">Computed algorithmically from tensor positions · NOT by AI judgment · preserves TRUE-BY-ASSUMPTION doctrine</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════ FUTURE ZONE ═══════════════════════ -->
+<section class="zone fut" style="margin-top:0">
+  <div class="zone-label"><span class="badge">Future</span> Phase 3+ — architecture preserved, not scheduled</div>
+
+  <div class="row-header">10 &nbsp;·&nbsp; longitudinal tracking — requires Projects schema</div>
+  <div class="row grid">
+    <div class="node">
+      <div class="n-title">projects table</div>
+      <div class="n-sub">uuid · user_id · name · description · created_at · future schema addition</div>
+      <div class="n-techs"><span class="tech">Supabase</span><span class="tech">Schema change</span></div>
+    </div>
+    <div class="node">
+      <div class="n-title">project_id on orientations</div>
+      <div class="n-sub">ALTER TABLE orientations ADD COLUMN project_id · links brain dumps to a named project thread</div>
+    </div>
+    <div class="node">
+      <div class="n-title">project_trajectory view</div>
+      <div class="n-sub">central_archetype · field_coherence · created_at per orientation — the data for the trail</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Gravity Center Trail</div>
+      <div class="n-sub">Central claim moves across sessions · "systemic concern → authority questioning → identity reorientation" · trajectory, not progress</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Auth (parked)</div>
+      <div class="n-sub">SLICE-AUTH built but bypassed · magic link · email templates not configured · activate before public launch</div>
+    </div>
+    <div class="node">
+      <div class="n-title">Workshop Mode</div>
+      <div class="n-sub">Hub + spoke staging areas · per-claim deep-dive workspaces · cross-orientation comparison · EVH Command Center pattern</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════ LEGEND ═══════════════════════ -->
+<div style="margin-top:36px; padding-top:20px; border-top:1px solid var(--border); display:flex; gap:24px; flex-wrap:wrap; align-items:center;">
+  <div style="font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-dim); margin-right:8px;">Status legend</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--live-hi)"><span style="width:8px;height:8px;border-radius:50%;background:var(--live-hi);display:inline-block"></span>Live — deployed at 604e9e5</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--gate-hi)"><span style="width:8px;height:8px;border-radius:2px;background:var(--gate);display:inline-block"></span>Gate — you are here</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--next-hi)"><span style="width:8px;height:8px;border-radius:50%;background:var(--next-hi);display:inline-block"></span>Next — spec complete, awaiting gate</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--inc-hi)"><span style="width:8px;height:8px;border-radius:50%;background:var(--inc-hi);display:inline-block"></span>Incubating — sequencing-locked</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--fut)"><span style="width:8px;height:8px;border-radius:50%;background:var(--fut);display:inline-block"></span>Future — architecture preserved</div>
+  <div style="margin-left:auto;font-size:9px;color:var(--text-dim)">POE &nbsp;·&nbsp; Blue Ocean &nbsp;·&nbsp; Session 10</div>
+</div>
+
+</div>
+</body>
+</html>

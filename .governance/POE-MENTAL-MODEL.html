@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POE — Mental Model</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1a1a1a;
+    --border: #2a2a2a;
+    --border2: #333;
+    --text-primary: #f5f5f5;
+    --text-secondary: #d0d0d0;
+    --text-muted: #888;
+    --accent: #4ade80;
+    --accent-dim: #22c55e;
+    --accent-glow: rgba(74,222,128,0.12);
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --orange: #fb923c;
+    --ul: #60a5fa;
+    --ur: #4ade80;
+    --ll: #a78bfa;
+    --lr: #fbbf24;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Geist', 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .page { max-width: 1200px; margin: 0 auto; padding: 48px 32px 120px; }
+
+  /* TYPOGRAPHY */
+  h1 { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+       color: var(--text-muted); font-weight: 400; }
+  h2 { font-size: 22px; font-weight: 600; color: var(--text-primary);
+       margin-bottom: 6px; }
+  h3 { font-size: 13px; font-weight: 600; color: var(--text-secondary);
+       letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+  h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+  p  { color: var(--text-secondary); margin-bottom: 10px; }
+  .muted { color: var(--text-muted); font-size: 12px; }
+  .accent { color: var(--accent); }
+
+  /* HEADER */
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+    margin-bottom: 56px;
+  }
+  .site-header h1 { margin-bottom: 8px; }
+  .site-header .tagline {
+    font-size: 13px; color: var(--text-muted); font-style: italic;
+  }
+
+  /* SECTION */
+  .section { margin-bottom: 72px; }
+  .section-label {
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 4px;
+  }
+  .section-divider {
+    border: none; border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  .card-accent {
+    border-top: 2px solid var(--accent);
+  }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+
+  /* BADGE */
+  .badge {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 3px; border: 1px solid;
+    font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 500;
+  }
+  .badge-ul { color: var(--ul); border-color: var(--ul); background: rgba(96,165,250,0.08); }
+  .badge-ur { color: var(--ur); border-color: var(--ur); background: rgba(74,222,128,0.08); }
+  .badge-ll { color: var(--ll); border-color: var(--ll); background: rgba(167,139,250,0.08); }
+  .badge-lr { color: var(--lr); border-color: var(--lr); background: rgba(251,191,36,0.08); }
+  .badge-accent { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
+  .badge-muted  { color: var(--text-muted); border-color: var(--border2); }
+
+  /* FLOW */
+  .flow {
+    display: flex; align-items: flex-start; gap: 0;
+    margin: 24px 0;
+  }
+  .flow-step {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    position: relative;
+  }
+  .flow-step.highlighted { border-color: var(--accent); background: var(--accent-glow); }
+  .flow-arrow {
+    display: flex; align-items: center; padding: 0 8px;
+    color: var(--text-muted); font-size: 18px;
+    flex-shrink: 0; padding-top: 20px;
+  }
+  .flow-num {
+    font-size: 10px; color: var(--accent); letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .flow-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .flow-model {
+    font-size: 10px; color: var(--text-muted);
+    border: 1px solid var(--border); border-radius: 3px;
+    padding: 2px 6px; display: inline-block; margin-bottom: 8px;
+  }
+  .flow-model.opus { color: var(--purple); border-color: var(--purple); }
+  .flow-model.sonnet { color: var(--blue); border-color: var(--blue); }
+  .flow-model.code { color: var(--amber); border-color: var(--amber); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<div class="site-header">
+  <h1>Perspective Orientation Engine — Complete Mental Model</h1>
+  <div style="margin-top:12px;">
+    <h2>From first brain dump to enterprise trajectory</h2>
+    <p class="tagline">The system does not evaluate reality. It stabilizes orientation toward it.</p>
+  </div>
+</div>
+
+<!-- SECTION 1: SINGLE SESSION -->
+<div class="section">
+  <div class="section-label">Layer 01</div>
+  <h2>The Single Session</h2>
+  <p>Every orientation begins here. One brain dump produces a complete field map in three sequential operations.</p>
+
+  <div class="flow" style="margin-top:28px;">
+    <div class="flow-step">
+      <div class="flow-num">Input</div>
+      <div class="flow-title">Brain Dump</div>
+      <span class="flow-model">User</span>
+      <p class="muted" style="margin-top:8px;">Free-form text. No structure required. Whatever feels most present. Minimum 20 chars.</p>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-step highlighted">
+      <div class="flow-num">Call 1</div>
+      <div class="flow-title">Extraction</div>
+      <span class="flow-model sonnet">Claude Sonnet</span>
+      <p class="muted" style="margin-top:8px;">5–15 claims extracted. Each mapped across 4 axes simultaneously. Archetype labels generated. Gravity structure computed.</p>
+      <p class="muted">Model has no awareness Call 2 follows. Extraction purity preserved.</p>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-step">
+      <div class="flow-num">Compute</div>
+      <div class="flow-title">Structural Metrics</div>
+      <span class="flow-model code">Route Code</span>
+      <p class="muted" style="margin-top:8px;">Pure arithmetic. No AI. Counts claims per quadrant, tension density, gravity coverage, signal basis of central claim.</p>
+      <p class="muted">distribution_profile assigned algorithmically from counts.</p>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-step highlighted" style="border-color:var(--purple); background:rgba(167,139,250,0.06);">
+      <div class="flow-num">Call 2</div>
+      <div class="flow-title">Field Analysis</div>
+      <span class="flow-model opus">Claude Opus</span>
+      <p class="muted" style="margin-top:8px;">Reads completed JSON + metrics as data. Produces field observations + tensor confidence. Identifies low-signal placements.</p>
+      <p class="muted">Never re-reads brain dump. External structural observer only.</p>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <div class="flow-step">
+      <div class="flow-num">Store</div>
+      <div class="flow-title">Persist</div>
+      <span class="flow-model code">Supabase</span>
+      <p class="muted" style="margin-top:8px;">Full result_json saved. UUID generated. Shareable link created: /orient/[uuid]</p>
+      <p class="muted">brain_dump, field_coherence, central_archetype indexed. meta_layer + tensor_confidence inside JSONB.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- SECTION 2: THE FOUR AXES -->
+<div class="section">
+  <div class="section-label">Layer 02</div>
+  <h2>The Four Axes — What Every Claim Carries</h2>
+  <p>Each claim is placed across four independent axes simultaneously. The intersection produces the tensor.</p>
+
+  <div class="grid-4" style="margin-top:24px;">
+    <div class="card">
+      <h3 style="color:var(--blue);">AQAL Quadrant</h3>
+      <p class="muted" style="margin-bottom:14px;">Wilber — Where in the interior/exterior × individual/collective space</p>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div><span class="badge badge-ul">UL</span> <span class="muted">Interior Individual — thoughts, feelings, self-model</span></div>
+        <div><span class="badge badge-ur">UR</span> <span class="muted">Exterior Individual — body, behavior, observable</span></div>
+        <div><span class="badge badge-ll">LL</span> <span class="muted">Interior Collective — culture, shared meaning, norms</span></div>
+        <div><span class="badge badge-lr">LR</span> <span class="muted">Exterior Collective — systems, structures, institutions</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="color:var(--amber);">Cynefin Domain</h3>
+      <p class="muted" style="margin-bottom:14px;">Snowden — What is the cause-effect relationship?</p>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div><span class="badge badge-muted">Clear</span> <span class="muted">Obvious — best practice applies</span></div>
+        <div><span class="badge badge-muted">Complicated</span> <span class="muted">Expert analysis required</span></div>
+        <div><span class="badge badge-muted">Complex</span> <span class="muted">Emergent — retrospect only</span></div>
+        <div><span class="badge badge-muted">Chaotic</span> <span class="muted">No cause-effect — act first</span></div>
+        <div><span class="badge badge-muted">Confused</span> <span class="muted">Observer cannot classify</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="color:var(--purple);">Reasoning Mode</h3>
+      <p class="muted" style="margin-bottom:14px;">How the claim is epistemically constructed</p>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div><span class="badge badge-muted">Deductive</span> <span class="muted">General → specific</span></div>
+        <div><span class="badge badge-muted">Inductive</span> <span class="muted">Pattern confirmed by observation</span></div>
+        <div><span class="badge badge-muted">Abductive</span> <span class="muted">Best explanation for incomplete data</span></div>
+        <div><span class="badge badge-muted">Unknown</span> <span class="muted">Cannot be determined</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="color:var(--accent);">Observer Relevance</h3>
+      <p class="muted" style="margin-bottom:14px;">Vervaeke — Relevance realization weight</p>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div><span class="badge badge-accent">High</span> <span class="muted">Directly present, shaping attention</span></div>
+        <div><span class="badge badge-muted">Medium</span> <span class="muted">Present but backgrounded</span></div>
+        <div><span class="badge badge-muted">Low</span> <span class="muted">Peripheral, not load-bearing</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE CLAIM OBJECT -->
+  <div style="margin-top:28px;">
+    <h3>What a Single Claim Produces</h3>
+    <div class="grid-2" style="gap:16px;">
+      <div class="card" style="font-family:monospace; font-size:12px; color:var(--text-secondary); line-height:1.8;">
+        <span style="color:var(--text-muted);">// Per claim object</span><br>
+        <span style="color:var(--blue);">"id"</span>: <span style="color:var(--accent);">"c3"</span>,<br>
+        <span style="color:var(--blue);">"text"</span>: <span style="color:var(--accent);">"near-exact phrase from input"</span>,<br>
+        <span style="color:var(--blue);">"quadrant"</span>: <span style="color:var(--amber);">"UL"</span>,<br>
+        <span style="color:var(--blue);">"domain"</span>: <span style="color:var(--amber);">"Complex"</span>,<br>
+        <span style="color:var(--blue);">"reasoning"</span>: <span style="color:var(--amber);">"Abductive"</span>,<br>
+        <span style="color:var(--blue);">"relevance"</span>: <span style="color:var(--amber);">"High"</span>,<br>
+        <span style="color:var(--blue);">"archetype"</span>: <span style="color:var(--accent);">"Identity Destabilization"</span>,<br>
+        <span style="color:var(--blue);">"quadrant_tension"</span>: [<span style="color:var(--amber);">"LR"</span>, <span style="color:var(--amber);">"LL"</span>],<br>
+        <span style="color:var(--blue);">"domain_tension"</span>: [],<br>
+        <span style="color:var(--blue);">"gravity_role"</span>: <span style="color:var(--accent);">"internal_anchoring"</span>,<br>
+        <span style="color:var(--blue);">"inferred"</span>: <span style="color:var(--purple);">false</span>,<br>
+        <span style="color:var(--blue);">"narrative"</span>: {<br>
+        &nbsp;&nbsp;<span style="color:var(--text-muted);">quadrant, domain, reasoning,</span><br>
+        &nbsp;&nbsp;<span style="color:var(--text-muted);">relevance, gravity</span><br>
+        }
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="card">
+          <h4>Archetype Label</h4>
+          <p class="muted">2-4 word functional compression of the full tensor. Answers: "What kind of orientation event is this?" Structurally derived — not content description.</p>
+        </div>
+        <div class="card">
+          <h4>Tension Signals</h4>
+          <p class="muted">0-2 secondary quadrant pulls + 0-1 secondary domain pulls. Assigned AFTER primary placement. Only real tension — not theoretical possibility.</p>
+        </div>
+        <div class="card">
+          <h4>5-Section Narrative</h4>
+          <p class="muted">Why THIS claim lives in THIS quadrant. Why THIS domain. What is specifically abductive/inductive about THIS claim. Not generic definitions — specificity of instantiation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- SECTION 3: GRAVITY + META LAYER -->
+<div class="section">
+  <div class="section-label">Layer 03</div>
+  <h2>Field Structure — Gravity + Meta Layer</h2>
+  <p>After claims are placed, two field-level observations are made: gravitational structure (how claims organize around a center) and distribution analysis (how the field is shaped across the axes).</p>
+
+  <div class="grid-2" style="margin-top:24px;gap:24px;">
+
+    <!-- GRAVITY -->
+    <div>
+      <h3>Gravitational Structure <span class="muted">(from Call 1 — Sonnet)</span></h3>
+      <div class="card card-accent" style="margin-bottom:12px;">
+        <div style="font-size:10px;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">● Orientation Center</div>
+        <h4>Central Claim — "Systemic Fracture Realization"</h4>
+        <p class="muted">The claim that currently organizes the most relationships in the field. Not the most important truth — the current highest-coherence attractor.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="card" style="border-left:3px solid var(--blue);">
+          <h4>Structural Support</h4>
+          <p class="muted">Concrete evidence reinforcing the center is structurally grounded. System-level anchors.</p>
+        </div>
+        <div class="card" style="border-left:3px solid var(--purple);">
+          <h4>Narrative Pressure</h4>
+          <p class="muted">Reshapes the interpretive environment. Makes the center cognitively inevitable without direct proof.</p>
+        </div>
+        <div class="card" style="border-left:3px solid var(--accent);">
+          <h4>Internal Anchoring</h4>
+          <p class="muted">How the situation is being lived. Stabilizes through felt experience.</p>
+        </div>
+        <div class="card" style="border-left:3px solid var(--amber);">
+          <h4>Direct Observation</h4>
+          <p class="muted">Low-ambiguity concrete anchor points. Prevents field from floating into pure interpretation.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- META LAYER -->
+    <div>
+      <h3>Meta Layer + Tensor Confidence <span class="muted">(from Call 2 — Opus)</span></h3>
+      <div style="background:rgba(167,139,250,0.06);border:1px solid var(--purple);border-radius:6px;padding:16px;margin-bottom:12px;">
+        <h4 style="color:var(--purple);">Field Distribution</h4>
+        <p class="muted">Shape of field across axes — computed by code from claim counts, NOT by AI judgment.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+          <div style="text-align:center;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border);">
+            <div style="font-size:18px;font-weight:600;color:var(--accent);">concentrated</div>
+            <div class="muted">1-2 quadrants dominant, low tension</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border);">
+            <div style="font-size:18px;font-weight:600;color:var(--blue);">bifurcated</div>
+            <div class="muted">2 quadrant clusters, roughly equal</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border);">
+            <div style="font-size:18px;font-weight:600;color:var(--purple);">gradient</div>
+            <div class="muted">3-4 quadrants, low tension density</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border);">
+            <div style="font-size:18px;font-weight:600;color:var(--amber);">distributed</div>
+            <div class="muted">3-4 quadrants, high tension density</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-color:var(--purple);">
+        <h4>Tensor Confidence — Low-Signal Placements</h4>
+        <p class="muted">Call 2 reads the JSON structurally: which high-relevance claims have BOTH quadrant_tension AND domain_tension non-empty simultaneously? That is the objective signal of a forced placement.</p>
+        <p class="muted" style="margin-top:8px;">For each: one doctrine-compliant probe question generated. Maximum 3. Prefer zero.</p>
+        <div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--accent);margin-bottom:4px;">PRECISION AVAILABLE</div>
+          <div style="font-size:12px;color:var(--text-secondary);">"Do outcomes repeat reliably when you try the same approach, or do they keep surprising you?"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHAT DISTINGUISHES THEM -->
+  <div style="margin-top:28px;">
+    <h3>field_coherence vs distribution_profile — The Critical Distinction</h3>
+    <div class="card">
+      <p>These are orthogonal. A field can have <strong style="color:var(--accent);">strong coherence</strong> (clear gravitational center) AND <strong style="color:var(--accent);">distributed profile</strong> (claims spread across all quadrants with active tensions). The center emerged from a broad-basis field. OR it can have strong coherence AND concentrated profile — the center emerged from a narrow-basis field. Neither is better or worse. They are structurally different.</p>
+      <div style="margin-top:16px;overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <tr style="border-bottom:1px solid var(--border);">
+            <th style="text-align:left;padding:8px;color:var(--text-muted);">field_coherence</th>
+            <th style="text-align:left;padding:8px;color:var(--text-muted);">distribution_profile</th>
+            <th style="text-align:left;padding:8px;color:var(--text-muted);">Structural Description</th>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;"><span class="badge badge-accent">strong</span></td>
+            <td style="padding:8px;"><span class="badge" style="color:var(--amber);border-color:var(--amber);">distributed</span></td>
+            <td style="padding:8px;color:var(--text-secondary);">Broad-basis center. High quadrant coverage, active tensions throughout.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;"><span class="badge badge-accent">strong</span></td>
+            <td style="padding:8px;"><span class="badge" style="color:var(--red);border-color:var(--red);">concentrated</span></td>
+            <td style="padding:8px;color:var(--text-secondary);">Narrow-basis center. Low quadrant coverage, low tension density.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px;"><span class="badge badge-muted">competing</span></td>
+            <td style="padding:8px;"><span class="badge" style="color:var(--blue);border-color:var(--blue);">bifurcated</span></td>
+            <td style="padding:8px;color:var(--text-secondary);">Two attractors, each drawing from a distinct quadrant cluster.</td>
+          </tr>
+          <tr>
+            <td style="padding:8px;"><span class="badge badge-muted">distributed</span></td>
+            <td style="padding:8px;"><span class="badge" style="color:var(--purple);border-color:var(--purple);">distributed</span></td>
+            <td style="padding:8px;color:var(--text-secondary);">Wide open field. No center, high coverage, high tension density.</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- SECTION 4: ORIENTATION LIFECYCLE -->
+<div class="section">
+  <div class="section-label">Layer 04</div>
+  <h2>The Orientation Lifecycle</h2>
+  <p>Drift, Misclassification, and Collapse are not separate failures. They are stages of one degenerative process. Recovery is the fourth stage. The POE detects all of them — and makes distribution_profile a live signal for where the user currently sits in the cycle.</p>
+
+  <!-- LIFECYCLE DIAGRAM -->
+  <div style="margin-top:28px;position:relative;">
+    <div style="display:flex;align-items:stretch;gap:0;margin-bottom:4px;">
+
+      <div style="flex:1;background:rgba(74,222,128,0.08);border:1px solid var(--accent);border-radius:6px 0 0 6px;padding:20px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:8px;">⬤</div>
+        <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:6px;">Healthy Orientation</div>
+        <div class="muted">Multiple perspectives active. High dimensionality. Tensions present.</div>
+        <div style="margin-top:10px;"><span class="badge" style="color:var(--amber);border-color:var(--amber);">distributed</span></div>
+      </div>
+
+      <div style="display:flex;align-items:center;padding:0 4px;color:var(--amber);font-size:20px;">→</div>
+
+      <div style="flex:1;background:rgba(251,191,36,0.06);border:1px solid var(--amber);padding:20px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:8px;color:var(--amber);">◐</div>
+        <div style="font-size:13px;font-weight:600;color:var(--amber);margin-bottom:6px;">Drift</div>
+        <div class="muted">One perspective slowly dominating. User doesn't notice. Vector tilting.</div>
+        <div style="margin-top:10px;"><span class="badge" style="color:var(--purple);border-color:var(--purple);">gradient</span> → <span class="badge" style="color:var(--blue);border-color:var(--blue);">bifurcated</span></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--accent);">Gentle probe available</div>
+      </div>
+
+      <div style="display:flex;align-items:center;padding:0 4px;color:var(--orange);font-size:20px;">→</div>
+
+      <div style="flex:1;background:rgba(251,146,60,0.06);border:1px solid var(--orange);padding:20px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:8px;color:var(--orange);">◑</div>
+        <div style="font-size:13px;font-weight:600;color:var(--orange);margin-bottom:6px;">Misclassification</div>
+        <div class="muted">Wrong domain applied. Drift hardened. Expert tools applied to Complex. Patterns where patterns don't hold.</div>
+        <div style="margin-top:10px;"><span class="badge" style="color:var(--red);border-color:var(--red);">concentrated</span></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--accent);">Moderate probe</div>
+      </div>
+
+      <div style="display:flex;align-items:center;padding:0 4px;color:var(--red);font-size:20px;">→</div>
+
+      <div style="flex:1;background:rgba(248,113,113,0.06);border:1px solid var(--red);padding:20px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:8px;color:var(--red);">○</div>
+        <div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:6px;">Collapse</div>
+        <div class="muted">Single attractor. User no longer navigating — defending. Field shrunk to a point. Cross-links gone.</div>
+        <div style="margin-top:10px;"><span class="badge" style="color:var(--red);border-color:var(--red);">concentrated</span></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--accent);">Strong diagnostic panel</div>
+      </div>
+
+      <div style="display:flex;align-items:center;padding:0 4px;color:var(--blue);font-size:20px;">→</div>
+
+      <div style="flex:1;background:rgba(96,165,250,0.06);border:1px solid var(--blue);border-radius:0 6px 6px 0;padding:20px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:8px;color:var(--blue);">◎</div>
+        <div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:6px;">Recovery</div>
+        <div class="muted">Field expanding. New quadrants entering. Dimensionality increasing. HIGHER than before collapse.</div>
+        <div style="margin-top:10px;"><span class="badge" style="color:var(--purple);border-color:var(--purple);">gradient</span> → <span class="badge" style="color:var(--amber);border-color:var(--amber);">distributed</span></div>
+      </div>
+    </div>
+
+    <!-- Return arrow -->
+    <div style="text-align:center;margin-top:12px;color:var(--text-muted);font-size:12px;">
+      ↑ <span style="color:var(--accent);">Expanded Orientation</span> — post-recovery dimensionality exceeds pre-drift baseline ↑
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:24px;">
+    <div class="card">
+      <h4>The Landauer Connection</h4>
+      <p class="muted">Each stage of the lifecycle corresponds to how much possibility space has been foreclosed. Drift = beginning of premature collapse. Recovery = possibility space reopening. The distribution_profile is the observable proxy for this.</p>
+      <p class="muted">The POE was already designed as an engine of sustained possibility (TRUE-BY-ASSUMPTION, deferred commitment). Landauer provides the structural logic for WHY that design is correct: premature collapse is expensive, and the cost shows up as orientation failure.</p>
+    </div>
+    <div class="card">
+      <h4>What the System Detects (No Evaluation)</h4>
+      <p class="muted">The system never says "you are drifting" or "you have collapsed." It shows the distribution shape. The user interprets what it means for their situation.</p>
+      <p class="muted">A concentrated field is structurally described: "Claims distribute across one quadrant. Low tension density." Whether that concentration is appropriate for the situation — the user decides. Some situations genuinely live in one quadrant.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- SECTION 5: SITUATION THREADS -->
+<div class="section">
+  <div class="section-label">Layer 05 — Phase 2</div>
+  <h2>Situation Threads — Multi-Session Trajectory</h2>
+  <p>The user returns to the same situation over time. Each new brain dump on the same situation generates a new snapshot. Multiple snapshots form a trajectory. The system tracks the observer's orientation — not external facts about the situation.</p>
+
+  <!-- THREAD DIAGRAM -->
+  <div style="margin-top:28px;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:6px;">
+    <h3 style="margin-bottom:20px;">Orientation Timeline — Same Situation, Three Sessions</h3>
+
+    <div style="display:flex;align-items:center;gap:16px;overflow-x:auto;padding-bottom:8px;">
+
+      <!-- Session 1 -->
+      <div style="flex-shrink:0;width:160px;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;text-align:center;">SESSION 1</div>
+        <!-- Mini radial -->
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="70" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+          <line x1="80" y1="10" x2="80" y2="150" stroke="#2a2a2a" stroke-width="1"/>
+          <line x1="10" y1="80" x2="150" y2="80" stroke="#2a2a2a" stroke-width="1"/>
+          <text x="40" y="26" font-size="9" fill="#888" text-anchor="middle">UL</text>
+          <text x="120" y="26" font-size="9" fill="#888" text-anchor="middle">UR</text>
+          <text x="40" y="145" font-size="9" fill="#888" text-anchor="middle">LL</text>
+          <text x="120" y="145" font-size="9" fill="#888" text-anchor="middle">LR</text>
+          <!-- Concentrated in UL -->
+          <circle cx="45" cy="35" r="8" fill="rgba(96,165,250,0.4)" stroke="#60a5fa" stroke-width="1.5"/>
+          <circle cx="38" cy="55" r="6" fill="rgba(96,165,250,0.3)" stroke="#60a5fa" stroke-width="1"/>
+          <circle cx="58" cy="42" r="7" fill="rgba(96,165,250,0.35)" stroke="#60a5fa" stroke-width="1.5"/>
+          <circle cx="50" cy="65" r="5" fill="rgba(96,165,250,0.25)" stroke="#60a5fa" stroke-width="1"/>
+          <!-- Central -->
+          <circle cx="45" cy="35" r="12" fill="none" stroke="#4ade80" stroke-width="2" stroke-dasharray="3,2"/>
+        </svg>
+        <div style="text-align:center;margin-top:6px;">
+          <span class="badge" style="color:var(--red);border-color:var(--red);">concentrated</span>
+        </div>
+        <div class="muted" style="text-align:center;margin-top:4px;font-size:11px;">UL dominant. Low tension. 1 probe available.</div>
+      </div>
+
+      <div style="color:var(--text-muted);font-size:24px;flex-shrink:0;">→</div>
+
+      <!-- Session 2 -->
+      <div style="flex-shrink:0;width:160px;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;text-align:center;">SESSION 2</div>
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="70" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+          <line x1="80" y1="10" x2="80" y2="150" stroke="#2a2a2a" stroke-width="1"/>
+          <line x1="10" y1="80" x2="150" y2="80" stroke="#2a2a2a" stroke-width="1"/>
+          <text x="40" y="26" font-size="9" fill="#888" text-anchor="middle">UL</text>
+          <text x="120" y="26" font-size="9" fill="#888" text-anchor="middle">UR</text>
+          <text x="40" y="145" font-size="9" fill="#888" text-anchor="middle">LL</text>
+          <text x="120" y="145" font-size="9" fill="#888" text-anchor="middle">LR</text>
+          <!-- Spreading into other quadrants -->
+          <circle cx="45" cy="35" r="7" fill="rgba(96,165,250,0.3)" stroke="#60a5fa" stroke-width="1.5"/>
+          <circle cx="115" cy="42" r="6" fill="rgba(74,222,128,0.3)" stroke="#4ade80" stroke-width="1"/>
+          <circle cx="50" cy="110" r="5" fill="rgba(167,139,250,0.3)" stroke="#a78bfa" stroke-width="1"/>
+          <circle cx="120" cy="105" r="6" fill="rgba(251,191,36,0.3)" stroke="#fbbf24" stroke-width="1"/>
+          <circle cx="55" cy="55" r="8" fill="rgba(96,165,250,0.35)" stroke="#60a5fa" stroke-width="1.5"/>
+          <line x1="45" y1="35" x2="115" y2="42" stroke="#4ade80" stroke-width="1" stroke-dasharray="2,2" opacity="0.4"/>
+          <line x1="45" y1="35" x2="120" y2="105" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2" opacity="0.4"/>
+          <circle cx="55" cy="55" r="12" fill="none" stroke="#4ade80" stroke-width="2" stroke-dasharray="3,2"/>
+        </svg>
+        <div style="text-align:center;margin-top:6px;">
+          <span class="badge" style="color:var(--purple);border-color:var(--purple);">gradient</span>
+        </div>
+        <div class="muted" style="text-align:center;margin-top:4px;font-size:11px;">3 quadrants. Tension emerging. Widening.</div>
+      </div>
+
+      <div style="color:var(--text-muted);font-size:24px;flex-shrink:0;">→</div>
+
+      <!-- Session 3 -->
+      <div style="flex-shrink:0;width:160px;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;text-align:center;">SESSION 3</div>
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="70" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+          <line x1="80" y1="10" x2="80" y2="150" stroke="#2a2a2a" stroke-width="1"/>
+          <line x1="10" y1="80" x2="150" y2="80" stroke="#2a2a2a" stroke-width="1"/>
+          <text x="40" y="26" font-size="9" fill="#888" text-anchor="middle">UL</text>
+          <text x="120" y="26" font-size="9" fill="#888" text-anchor="middle">UR</text>
+          <text x="40" y="145" font-size="9" fill="#888" text-anchor="middle">LL</text>
+          <text x="120" y="145" font-size="9" fill="#888" text-anchor="middle">LR</text>
+          <!-- Full distribution -->
+          <circle cx="42" cy="38" r="6" fill="rgba(96,165,250,0.3)" stroke="#60a5fa" stroke-width="1"/>
+          <circle cx="118" cy="40" r="7" fill="rgba(74,222,128,0.3)" stroke="#4ade80" stroke-width="1.5"/>
+          <circle cx="45" cy="115" r="6" fill="rgba(167,139,250,0.3)" stroke="#a78bfa" stroke-width="1"/>
+          <circle cx="118" cy="108" r="6" fill="rgba(251,191,36,0.3)" stroke="#fbbf24" stroke-width="1"/>
+          <circle cx="70" cy="55" r="9" fill="rgba(96,165,250,0.35)" stroke="#60a5fa" stroke-width="1.5"/>
+          <circle cx="95" cy="60" r="7" fill="rgba(74,222,128,0.3)" stroke="#4ade80" stroke-width="1"/>
+          <line x1="70" y1="55" x2="118" y2="40" stroke="#4ade80" stroke-width="1" opacity="0.5"/>
+          <line x1="70" y1="55" x2="45" y2="115" stroke="#a78bfa" stroke-width="1" opacity="0.5"/>
+          <line x1="70" y1="55" x2="118" y2="108" stroke="#fbbf24" stroke-width="1" opacity="0.5"/>
+          <line x1="70" y1="55" x2="42" y2="38" stroke="#60a5fa" stroke-width="1" opacity="0.5"/>
+          <circle cx="70" cy="55" r="13" fill="none" stroke="#4ade80" stroke-width="2" stroke-dasharray="3,2"/>
+        </svg>
+        <div style="text-align:center;margin-top:6px;">
+          <span class="badge" style="color:var(--amber);border-color:var(--amber);">distributed</span>
+        </div>
+        <div class="muted" style="text-align:center;margin-top:4px;font-size:11px;">All 4 quadrants. High tension. Broad-basis center.</div>
+      </div>
+
+      <!-- What changed -->
+      <div style="flex:1;min-width:200px;padding:16px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);">
+        <h4>What the System Tracks</h4>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <div style="font-size:12px;color:var(--text-secondary);">● Claims that <span style="color:var(--accent);">persisted</span> across sessions</div>
+          <div style="font-size:12px;color:var(--text-secondary);">● Claims that <span style="color:var(--amber);">disappeared</span></div>
+          <div style="font-size:12px;color:var(--text-secondary);">● Claims that are <span style="color:var(--blue);">new</span></div>
+          <div style="font-size:12px;color:var(--text-secondary);">● distribution_profile <span style="color:var(--accent);">trajectory</span></div>
+          <div style="font-size:12px;color:var(--text-secondary);">● Central claim <span style="color:var(--purple);">stability</span></div>
+          <div style="font-size:12px;color:var(--text-secondary);">● Gravity structure <span style="color:var(--amber);">evolution</span></div>
+        </div>
+        <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--text-muted);">Self-referential only. The system tracks how the OBSERVER'S orientation shifted — not whether the situation changed.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHEMA ADDITION -->
+  <div class="grid-2" style="margin-top:24px;">
+    <div class="card">
+      <h4>Schema Addition for Phase 2 (Simple)</h4>
+      <div style="font-family:monospace;font-size:12px;color:var(--text-secondary);line-height:1.8;margin-top:8px;">
+        <span style="color:var(--text-muted);">-- Two new columns on orientations table</span><br>
+        <span style="color:var(--blue);">situation_thread_id</span>  <span style="color:var(--amber);">uuid</span>  <span style="color:var(--text-muted);">-- null = standalone</span><br>
+        <span style="color:var(--blue);">session_sequence</span>     <span style="color:var(--amber);">int</span>   <span style="color:var(--text-muted);">-- 1, 2, 3... within thread</span>
+      </div>
+      <p class="muted" style="margin-top:12px;">That's the entire schema change. Threads are just orientation rows linked by a UUID. All the richness is in the JSONB already.</p>
+    </div>
+    <div class="card">
+      <h4>The Open Question: Thread Declaration</h4>
+      <p class="muted">How does the user say "this is the same situation as before"? Automatic detection (vocabulary matching) risks false links. Manual is safer but creates friction.</p>
+      <p class="muted">This is a UX decision not yet made. It needs a slice spec before it touches the builder. Not blocking Phase 2 architecture — just UX flow.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- SECTION 6: ENTERPRISE -->
+<div class="section">
+  <div class="section-label">Layer 06 — Phase 4</div>
+  <h2>Enterprise — Multi-Observer, Shared Situation</h2>
+  <p>Multiple people orient to the same situation independently. Each runs through the full 3-call pipeline with no knowledge of the others. Then a synthesis call compares the maps. The result is a divergence field — not a merged opinion.</p>
+
+  <div style="margin-top:28px;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:6px;">
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;">
+      <div style="flex:1;min-width:140px;padding:14px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Person A</div>
+        <div style="display:flex;justify-content:center;gap:4px;">
+          <span class="badge badge-lr">LR</span><span class="badge badge-muted">Complex</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Systemic framing</div>
+      </div>
+      <div style="flex:1;min-width:140px;padding:14px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Person B</div>
+        <div style="display:flex;justify-content:center;gap:4px;">
+          <span class="badge badge-lr">LR</span><span class="badge badge-muted">Complex</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Systemic framing</div>
+      </div>
+      <div style="flex:1;min-width:140px;padding:14px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Person C</div>
+        <div style="display:flex;justify-content:center;gap:4px;">
+          <span class="badge badge-lr">LR</span><span class="badge badge-muted">Complicated</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Systemic / expertise</div>
+      </div>
+      <div style="flex:1;min-width:140px;padding:14px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);text-align:center;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Person D</div>
+        <div style="display:flex;justify-content:center;gap:4px;">
+          <span class="badge badge-lr">LR</span><span class="badge badge-muted">Complex</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Systemic framing</div>
+      </div>
+      <div style="flex:1;min-width:140px;padding:14px;background:rgba(74,222,128,0.08);border-radius:4px;border:1px solid var(--accent);text-align:center;">
+        <div style="font-size:11px;color:var(--accent);margin-bottom:6px;">Person E ← divergent</div>
+        <div style="display:flex;justify-content:center;gap:4px;">
+          <span class="badge badge-ul">UL</span><span class="badge badge-muted">Complex</span>
+        </div>
+        <div style="font-size:11px;color:var(--accent);margin-top:6px;">Interior framing</div>
+      </div>
+    </div>
+
+    <div class="card card-accent">
+      <h4>The Divergence Map — What Enterprise Sees</h4>
+      <p class="muted">Four people orient from LR/Complex (institutional structure, emergent). One person — Person E — orients from UL/Complex (interior individual, emergent). That single divergent orientation is likely the most valuable signal in the room.</p>
+      <p class="muted">The system surfaces it without declaring it correct or incorrect. "One observer orients this situation primarily from the interior individual perspective. Four orient from the exterior collective perspective." The team decides what to do with that.</p>
+    </div>
+
+    <div class="grid-3" style="margin-top:16px;">
+      <div style="padding:14px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);">
+        <h4>Convergent Claims</h4>
+        <p class="muted">Claims that appear across multiple observer maps. High probability of structural signal.</p>
+      </div>
+      <div style="padding:14px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);">
+        <h4>Unique Perspectives</h4>
+        <p class="muted">Claims that appear in only one map. Possible blind spots for the majority — or important minority knowledge.</p>
+      </div>
+      <div style="padding:14px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);">
+        <h4>Domain Disagreements</h4>
+        <p class="muted">Same situation content classified in different Cynefin domains. This is the most actionable signal — it reveals where the team is applying different reasoning models.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TENANT SCHEMA -->
+  <div class="card" style="margin-top:16px;">
+    <h4>Multi-Tenant Schema (EVH Pattern — already designed)</h4>
+    <div style="font-family:monospace;font-size:12px;color:var(--text-secondary);line-height:1.8;margin-top:8px;">
+      <span style="color:var(--text-muted);">-- shared_situation_id links multiple observers to one situation</span><br>
+      <span style="color:var(--blue);">shared_situation_id</span>  <span style="color:var(--amber);">uuid</span>  <span style="color:var(--text-muted);">-- belongs to workspace, not individual</span><br>
+      <span style="color:var(--blue);">tenant_id</span>           <span style="color:var(--amber);">uuid</span>  <span style="color:var(--text-muted);">-- RLS isolates workspace data</span><br>
+      <span style="color:var(--blue);">user_id</span>             <span style="color:var(--amber);">uuid</span>  <span style="color:var(--text-muted);">-- individual observer</span>
+    </div>
+    <p class="muted" style="margin-top:10px;">The EVH tenant pattern transfers directly. Each organization gets isolated orientation data. The synthesis call receives only the orientation JSONs for that workspace — no cross-tenant leakage.</p>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- SECTION 7: PHASE ROADMAP -->
+<div class="section">
+  <div class="section-label">Layer 07</div>
+  <h2>Phase Roadmap — What Gets Built When</h2>
+
+  <div style="margin-top:24px;display:flex;flex-direction:column;gap:3px;">
+
+    <!-- Phase 1 NOW -->
+    <div style="padding:20px;background:rgba(74,222,128,0.06);border:1px solid var(--accent);border-radius:6px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <span style="font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent);">Phase 1 — LIVE (S-001 through S-008)</span>
+        <span class="badge badge-accent">NOW</span>
+      </div>
+      <div class="grid-3" style="gap:10px;">
+        <div style="font-size:12px;color:var(--text-secondary);">✓ 3-call pipeline (extraction only — Call 2 quarantined)</div>
+        <div style="font-size:12px;color:var(--text-secondary);">✓ 4-axis tensor per claim</div>
+        <div style="font-size:12px;color:var(--text-secondary);">✓ Archetype labels + tension signals</div>
+        <div style="font-size:12px;color:var(--text-secondary);">✓ Gravitational structure</div>
+        <div style="font-size:12px;color:var(--text-secondary);">✓ 5-section narrative per claim</div>
+        <div style="font-size:12px;color:var(--text-secondary);">✓ Persistence + shareable UUID URLs</div>
+        <div style="font-size:12px;color:var(--amber);">⚠ Auth built, bypassed for testing</div>
+        <div style="font-size:12px;color:var(--amber);">⚠ S-008 atomized narrative NOT YET TESTED</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;color:var(--border2);font-size:20px;padding:4px;">↓</div>
+
+    <!-- Phase 1A -->
+    <div style="padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:6px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <span style="font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);">Phase 1A — Meta Layer Silent</span>
+        <span class="badge badge-muted">After S-008 tested</span>
+      </div>
+      <p class="muted">Add Call 2 (Opus). Store meta_layer + tensor_confidence silently in result_json. No UI change. Run 10+ sessions. Confirm distribution_profile produces distinct signal from field_coherence in real output.</p>
+    </div>
+
+    <div style="text-align:center;color:var(--border2);font-size:20px;padding:4px;">↓</div>
+
+    <!-- Phase 1B -->
+    <div style="padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:6px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <span style="font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);">Phase 1B — Field Distribution UI</span>
+        <span class="badge badge-muted">After 10+ sessions confirmed</span>
+      </div>
+      <p class="muted">Add FIELD DISTRIBUTION panel below gravity structure. Pure structural description. No probes yet. "Claims distribute across three quadrants. Tension vectors active on 7 of 11 claims."</p>
+    </div>
+
+    <div style="text-align:center;color:var(--border2);font-size:20px;padding:4px;">↓</div>
+
+    <!-- Phase 2 -->
+    <div style="padding:20px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <span style="font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);">Phase 2 — Socratic Timing Engine</span>
+        <span class="badge badge-muted">After SLICE-SOCRATIC built</span>
+      </div>
+      <p class="muted">Activate tensor_confidence probes in UI. Call 3 (Sonnet) generates precision probes from low-signal placements. Users can answer or skip. Re-collapse only affected placements. Situation threads introduced.</p>
+    </div>
+
+    <div style="text-align:center;color:var(--border2);font-size:20px;padding:4px;">↓</div>
+
+    <!-- Phase 3 -->
+    <div style="padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:6px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <span style="font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);">Phase 3 — Orientation Habits + Longitudinal</span>
+        <span class="badge badge-muted">After auth + trajectories active</span>
+      </div>
+      <p class="muted">Collapse trajectory tracking per thread. Orientation habits detection across sessions (recurring quadrant patterns, conditional collapse patterns, recovery mechanisms). Observatory mode. D3 Orientation Timeline as second primary view.</p>
+    </div>
+
+    <div style="text-align:center;color:var(--border2);font-size:20px;padding:4px;">↓</div>
+
+    <!-- Phase 4 -->
+    <div style="padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:6px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <span style="font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);">Phase 4 — Enterprise Multi-Observer</span>
+        <span class="badge badge-muted">After multi-tenancy</span>
+      </div>
+      <p class="muted">Shared situations across workspace. Divergence map. Convergent claims. Synthesis call (Opus) reads all observer maps. Domain disagreements surfaced. Team workshops. Moonraker facilitation mode.</p>
+    </div>
+
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- SECTION 8: DOCTRINE -->
+<div class="section">
+  <div class="section-label">Layer 08 — Constitutional</div>
+  <h2>The Doctrine — What Never Changes</h2>
+
+  <div class="grid-2" style="margin-top:24px;gap:24px;">
+
+    <div>
+      <h3>The Three-Call Architecture Enacts the Doctrine</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="card">
+          <h4>Call 1 is blind to Call 2</h4>
+          <p class="muted">The extraction model never knows it will be observed. This is the same logic as TRUE-BY-ASSUMPTION — the system does not pre-judge. Each call holds only the context it needs, nothing more.</p>
+        </div>
+        <div class="card">
+          <h4>Call 2 reads structure, not content</h4>
+          <p class="muted">The field analysis model reads JSON metrics — counts and ratios — not claims. This is the closest the system gets to pure objectivity. Arithmetic does not evaluate truth.</p>
+        </div>
+        <div class="card">
+          <h4>Call 3 receives only ambiguity</h4>
+          <p class="muted">In Phase 2, the probe-generation model receives only the list of low-signal placements — not the full brain dump. Narrow context produces clean probe questions.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3>The 10 Axioms — Governing Everything</h3>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:12px;padding:8px;background:var(--surface2);border-radius:3px;color:var(--text-secondary);">1. Orientation precedes resolution</div>
+        <div style="font-size:12px;padding:8px;background:var(--surface2);border-radius:3px;color:var(--text-secondary);">2. The entry point is subjective</div>
+        <div style="font-size:12px;padding:8px;background:var(--surface2);border-radius:3px;color:var(--text-secondary);">3. Disorder is the natural starting condition</div>
+        <div style="font-size:12px;padding:8px;background:rgba(74,222,128,0.08);border-radius:3px;border:1px solid rgba(74,222,128,0.2);color:var(--accent);">4. Claims are treated as given inputs — TRUE-BY-ASSUMPTION</div>
+        <div style="font-size:12px;padding:8px;background:var(--surface2);border-radius:3px;color:var(--text-secondary);">5. Multiple ontologies are valid perspectives</div>
+        <div style="font-size:12px;padding:8px;background:var(--surface2);border-radius:3px;color:var(--text-secondary);">6. Complexity domains shape valid action patterns</div>
+        <div style="font-size:12px;padding:8px;background:var(--surface2);border-radius:3px;color:var(--text-secondary);">7. Constraints define system behavior</div>
+        <div style="font-size:12px;padding:8px;background:var(--surface2);border-radius:3px;color:var(--text-secondary);">8. Practice legitimacy varies by domain</div>
+        <div style="font-size:12px;padding:8px;background:var(--surface2);border-radius:3px;color:var(--text-secondary);">9. Language reveals cognitive posture</div>
+        <div style="font-size:12px;padding:8px;background:var(--surface2);border-radius:3px;color:var(--text-secondary);">10. Orientation remains with the user</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOCABULARY -->
+  <div style="margin-top:24px;">
+    <h3>Vocabulary Governance — Critical Words</h3>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <tr style="border-bottom:1px solid var(--border);">
+          <th style="text-align:left;padding:10px;color:var(--accent);">USE</th>
+          <th style="text-align:left;padding:10px;color:var(--red);">NEVER USE</th>
+          <th style="text-align:left;padding:10px;color:var(--text-muted);">Why</th>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px;color:var(--accent);">Orientation</td>
+          <td style="padding:10px;color:var(--red);">Analysis / Diagnosis</td>
+          <td style="padding:10px;color:var(--text-muted);">Navigational, not clinical</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px;color:var(--accent);">Affordance</td>
+          <td style="padding:10px;color:var(--red);">Recommendation</td>
+          <td style="padding:10px;color:var(--text-muted);">Possibility, not prescription</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px;color:var(--accent);">Orientation Map Generated</td>
+          <td style="padding:10px;color:var(--red);">Analysis Complete</td>
+          <td style="padding:10px;color:var(--text-muted);">Map = exploratory</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px;color:var(--accent);">Precision available</td>
+          <td style="padding:10px;color:var(--red);">This needs correction</td>
+          <td style="padding:10px;color:var(--text-muted);">No placement is wrong — just lower signal</td>
+        </tr>
+        <tr>
+          <td style="padding:10px;color:var(--accent);">Situation</td>
+          <td style="padding:10px;color:var(--red);">Problem</td>
+          <td style="padding:10px;color:var(--text-muted);">Wider aperture, non-diagnostic</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- SECTION 9: OPEN QUESTIONS -->
+<div class="section">
+  <div class="section-label">Layer 09</div>
+  <h2>Open Questions — Decisions Not Yet Made</h2>
+
+  <div class="grid-2" style="margin-top:24px;">
+    <div class="card" style="border-left:3px solid var(--amber);">
+      <div style="font-size:10px;color:var(--amber);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Decision Required Before Phase 2</div>
+      <h4>Situation Thread Declaration</h4>
+      <p class="muted">How does the user say "this is the same situation as before"? Three options: (1) Automatic — system matches vocabulary across brain dumps. Risk: false links. (2) Manual — user explicitly links. Safer but adds friction. (3) Suggested — system proposes a link, user confirms. Probably the right answer but needs a UX spec before it touches the builder.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--amber);">
+      <div style="font-size:10px;color:var(--amber);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Decision Required Before Phase 2</div>
+      <h4>Socratic Response Re-Collapse</h4>
+      <p class="muted">When a user answers a probe question — what happens mechanically? Does the answer append to the original brain dump and re-run Call 1? Or does Call 3 receive only the specific provisional placement + the answer and update only that axis? The second is cleaner and cheaper but needs a slice spec before it touches the builder.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--border2);">
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Monitor in Phase 1A</div>
+      <h4>field_coherence / distribution_profile Distinctness</h4>
+      <p class="muted">The theory says they measure different things. Real output data will confirm or challenge this. Phase 1A exists specifically to test this empirically before surfacing anything to users. If they correlate too strongly, the disambiguation needs refinement.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--border2);">
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Long-term</div>
+      <h4>EVH ↔ POE Connector</h4>
+      <p class="muted">Entity in EVH could have associated POE orientation threads. Claims from POE could inform EVH entity fields. UUID model supports this naturally. Both apps stay independent — connector is a bridge layer, not a merge. Far future, but the architecture accommodates it.</p>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="border-top:1px solid var(--border);padding-top:32px;margin-top:48px;">
+  <div style="text-align:center;">
+    <p style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:8px;">
+      "The system does not evaluate reality. It stabilizes orientation toward it."
+    </p>
+    <p class="muted">POE Mental Model — Generated Session 9 — 2026-03-26</p>
+    <p class="muted">Blue Ocean (Foreman) — Perspective Orientation Engine</p>
+  </div>
+</div>
+
+</div><!-- /page -->
+</body>
+</html>
