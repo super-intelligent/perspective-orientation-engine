@@ -1,11 +1,13 @@
 # SESSION STATE — POE (Perspective Orientation Engine)
 ## The ONLY file the Foreman reads first. Verified against code.
 
-**Session:** 12
-**Date:** 2026-04-01
-**Git Hash:** 3137207
+**Session:** 13
+**Date:** 2026-04-09
+**Git Hash:** bb6fd77 (pre-session — will update after first commit)
 **Branch:** main
 **Deploy State:** LIVE at perspective.super-intelligent.ai ✅
+**Machine:** Lenovo (primary) — project moved from MSI, OneDrive sync active
+**Governance path:** .governance/ now inside project root (same level as src/)
 
 ---
 
