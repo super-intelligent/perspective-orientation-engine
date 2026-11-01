@@ -1,0 +1,38 @@
+packet_type: lane_packet
+lane_id: G01-INQUIRY-FOUNDATION-2026-11-01
+system: perspective-orientation-engine
+adoption_pattern: LANE_COLD_START
+repo_path: C:/Users/ourpr/OneDrive/Documents/POE-worktrees/g01-inquiry-foundation
+original_checkout: C:/Users/ourpr/OneDrive/Documents/Perspective Orientation Engine
+branch: codex/g01-inquiry-foundation
+base: 49b381bc95869c56c3384840877829bfd16967f7
+head_at_open: 49b381bc95869c56c3384840877829bfd16967f7
+environment: local Windows; offline synthetic contract tests; no env or Vercel project metadata
+human_outcome: Preserve human inquiry upstream of claims without promoting interpretation to accepted meaning.
+owned_seam: Standalone inquiry contract and offline developer fixture; sole application writer is POE Coder.
+collision_keys: [src/lib/inquiry.ts, tests/inquiry.test.mjs, scripts/demo-inquiry.mjs]
+risk_profile: BLUE_NEW_SLICE
+allowed_effects:
+  - New contract, scenarios, glossary and focused custody note
+  - Offline synthetic tests/demo using existing dependencies
+  - Local development branch, commit and draft PR
+  - Prevent Git auto-deployment for this exact development branch
+forbidden_effects:
+  - Production deployment or main merge
+  - Database, auth, RLS, credential or public/private visibility change
+  - Provider calls, prompt/model/token-budget/spend behavior changes
+  - Cross-app API coupling or external-engine integration
+  - Editing or committing unrelated local governance additions
+semantic_custody_concepts:
+  - orientation-output-meaning
+  - model-output-vs-human-accepted-orientation
+  - inquiry-interpretation
+required_evidence:
+  - Executable source-grounded explicit/inferred contract fixture and rejection cases
+  - TypeScript and targeted lint results
+  - Exact commit and draft PR plus deployment observations
+stop_conditions:
+  - Unselected protected effect becomes necessary
+  - Unexpected application-writer collision
+  - Private source material would be published
+founder_decision_required: none for this reversible foundation; live integration and production remain later gates

@@ -1,5 +1,21 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Question-aware foundation (G01 development increment)
+
+The offline inquiry contract retains explicit human questions, inferred interpretations, source spans, proposed links to existing claims, and human corrections. It does not yet run in the live extraction or viewer. See the [slice contract and acceptance criteria](.governance/slices/active/SLICE-G01-INQUIRY-FOUNDATION.md), [glossary](CONTEXT.md), and [synthetic fixture](tests/fixtures/inquiry-mixed.json).
+
+With Node 22.18+:
+
+```bash
+npm ci --ignore-scripts
+npm test
+npm run demo:inquiry
+```
+
+Consumers call `parseInquiry(input, existingClaims)` from `src/lib/inquiry.ts`; failures throw `ZodError` with field paths. The caller supplies the matching orientation's claim IDs. There are no provider calls or persistence effects in this contract.
+
+Independent review is pending. The branch `codex/g01-inquiry-foundation` is excluded from Vercel Git auto-deployments; this is not approval to merge or deploy.
+
 ## Getting Started
 
 First, run the development server:

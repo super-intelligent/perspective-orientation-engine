@@ -1,0 +1,92 @@
+{
+  "description": "Synthetic developer fixture; no historical conversation or real personal data.",
+  "claims": [
+    { "id": "c1", "text": "The team is failing.", "inferred": true },
+    { "id": "c2", "text": "I cannot see every part of the team situation.", "inferred": false }
+  ],
+  "inquiry": {
+    "schema_version": 1,
+    "id": "inquiry-demo-1",
+    "actors": [
+      { "id": "person-1", "kind": "human" },
+      { "id": "interpreter-1", "kind": "model" }
+    ],
+    "sources": [
+      {
+        "id": "s1",
+        "actor_id": "person-1",
+        "locator": "synthetic:demo/input",
+        "text": "What am I not seeing about my team?"
+      },
+      {
+        "id": "s2",
+        "actor_id": "person-1",
+        "locator": "synthetic:demo/later-response",
+        "text": "I am asking about my perspective, not saying the team is failing."
+      }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "kind": "explicit",
+        "text": "What am I not seeing about my team?",
+        "source": {
+          "source_id": "s1",
+          "start": 0,
+          "end": 35,
+          "quote": "What am I not seeing about my team?"
+        }
+      },
+      {
+        "id": "q2",
+        "kind": "inferred",
+        "text": "Why is my team failing?",
+        "proposed_by": "interpreter-1",
+        "basis": [
+          { "source_id": "s1", "start": 0, "end": 35, "quote": "What am I not seeing about my team?" }
+        ],
+        "rationale": "A possible reading of the team concern; the source does not establish failure."
+      }
+    ],
+    "relationships": [
+      {
+        "id": "link-1",
+        "question_id": "q2",
+        "target": { "kind": "question", "id": "q1" },
+        "relation": "possibly_underlies",
+        "status": "proposed",
+        "proposed_by": "interpreter-1",
+        "basis": [
+          { "source_id": "s1", "start": 0, "end": 35, "quote": "What am I not seeing about my team?" }
+        ],
+        "rationale": "Retained as an interpretation that the human later corrects; not accepted intent."
+      },
+      {
+        "id": "link-2",
+        "question_id": "q2",
+        "target": { "kind": "claim", "id": "c1" },
+        "relation": "possibly_informs",
+        "status": "proposed",
+        "proposed_by": "interpreter-1",
+        "basis": [
+          { "source_id": "s1", "start": 0, "end": 35, "quote": "What am I not seeing about my team?" }
+        ],
+        "rationale": "The inferred question may inform an inferred claim; neither establishes the person's meaning."
+      }
+    ],
+    "responses": [
+      {
+        "id": "r1",
+        "question_id": "q2",
+        "kind": "correction",
+        "text": "I am asking about my perspective, not saying the team is failing.",
+        "source": {
+          "source_id": "s2",
+          "start": 0,
+          "end": 65,
+          "quote": "I am asking about my perspective, not saying the team is failing."
+        }
+      }
+    ]
+  }
+}
