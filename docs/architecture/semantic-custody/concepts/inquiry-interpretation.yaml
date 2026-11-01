@@ -1,0 +1,22 @@
+concept_id: inquiry-interpretation
+canonical_name: Inquiry Interpretation
+status: development_contract_v1_pending_independent_review
+plain_language:
+  question: Whose question or interpretation is this, and what supports its attribution?
+local_truth:
+  - An explicit question retains exact source text attributed to a human.
+  - An inferred question retains a proposer, source basis and rationale.
+  - A relationship is a proposal referencing existing questions or supplied claim IDs.
+  - A human response can correct an interpretation without deleting earlier material.
+does_not_mean:
+  - Attribution is authenticated identity or source authenticity.
+  - An inferred question reveals the human's actual unstated intent.
+  - A source quote establishes the truth of a question's presuppositions.
+  - A proposed link establishes causal or temporal lineage or answer fit.
+  - A response, correction or successful parse establishes acceptance or agreement.
+  - An inferred claim is an inferred question.
+review_when:
+  - A live extraction prompt or question capture interface is introduced.
+  - Human acceptance, persistence or revision history is proposed.
+  - Questions receive coordinates, weights or ranking.
+  - Story Arc, EVH or an external reasoning engine consumes this document.

@@ -1,0 +1,60 @@
+receipt_type: engineering_handoff
+receipt_id: G01-INQUIRY-FOUNDATION-2026-11-01
+closed_at: '2026-11-01'
+system: perspective-orientation-engine
+lane_id: G01-INQUIRY-FOUNDATION-2026-11-01
+human_outcome: Inquiry and its possible interpretations can be retained distinctly for review.
+exact_specimen:
+  repo_path: C:/Users/ourpr/OneDrive/Documents/POE-worktrees/g01-inquiry-foundation
+  branch: codex/g01-inquiry-foundation
+  base: 49b381bc95869c56c3384840877829bfd16967f7
+  tested_code_head: 3e46c85ba11cfd664038b185a0e52a6572c906e4
+  environment: Windows; Node 25.6.1; npm 11.9.0; locked Zod 4.3.6 and TypeScript 5.9.3
+changes:
+  - Strict versioned inquiry parser with source and actor attribution, explicit/inferred questions, proposal-only relationships, human responses/corrections and existing claim ID references
+  - Synthetic fixture, offline demonstration and 42 developer tests
+  - Slice/scenarios, glossary, focused semantic custody note, lane packet and README entry
+  - Git deployment exclusion for exactly this development branch
+semantic_custody_read:
+  - Original checkout docs/architecture/semantic-custody/README.md
+  - Original checkout concepts/orientation-output-meaning.yaml
+  - Original checkout concepts/model-output-vs-human-accepted-orientation.yaml
+semantic_custody_created_or_updated:
+  - docs/architecture/semantic-custody/concepts/inquiry-interpretation.yaml
+evidence:
+  - npm ci --ignore-scripts --no-audit --no-fund completed against unchanged lockfile
+  - npm test passed 42 of 42 tests against locked dependencies
+  - npm run demo:inquiry completed with original questions and later correction retained
+  - npx tsc --noEmit passed
+  - npx eslint src/lib/inquiry.ts tests/inquiry.test.mjs scripts/demo-inquiry.mjs passed
+  - git diff --cached --check passed before implementation commit
+  - No diff under src/app, src/components, src/hooks, src/types, src/utils, package-lock.json or .governance/incubating
+verified:
+  - Exact quoted source spans and attributed human questions/responses are structurally checked
+  - Inferences and relationships cannot acquire an acceptance field through this parser
+  - Empty legacy inquiry and many-to-many proposed links are supported
+reported:
+  - November 1 creator direction selected this bounded foundation for coding
+inferred:
+  - The reversible v1 relationship names are a workable foundation, pending independent review
+unknown:
+  - Independent acceptance and intended later live capture/extraction design
+  - Current production health or database state
+  - A full Next production build was not run; this increment has no live route/viewer integration
+historical:
+  - March Meta Layer quarantine prerequisites remain held and are not dependencies of this offline parser
+gate_disposition: ENGINEERING_CHECKS_PASS_PENDING_INDEPENDENT_REVIEW
+states_reached: [contract_codified, offline_fixture_executable, code_committed]
+states_not_reached: [independent_acceptance, live_question_feature, merge, deployment, persistence]
+protected_effects_confirmed_absent:
+  - Auth, database, RLS, credential, visibility or public-route changes
+  - Provider calls or prompt/model/token-budget changes
+  - Cross-application or external-engine coupling
+  - Production deployment or main merge
+  - Changes to original checkout's unrelated local governance additions
+remaining_p0: []
+remaining_p1: []
+remaining_p2: []
+severity_note: Empty lists mean no coder-known blocking defect; they are not independent audit findings.
+founder_decision_required: none for foundation implementation; human selection of live integration remains later
+next_gate: Master collects concrete branch/PR return and routes it to existing independent Coding Auditor; no merge before review and authorization.
